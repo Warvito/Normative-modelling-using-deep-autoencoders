@@ -1,0 +1,11 @@
+pandas
+numpy
+ipython
+Pillow
+matplotlib
+sklearn
+tensorflow-gpu==2.0.0-beta1
+tables
+joblib
+nibabel
+matplotlib-label-lines

@@ -1,0 +1,7 @@
+# Environments
+venv/
+
+.idea/
+data/
+
+outputs/

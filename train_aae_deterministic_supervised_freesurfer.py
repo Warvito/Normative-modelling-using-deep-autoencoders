@@ -101,7 +101,7 @@ def main():
 
     # -------------------------------------------------------------------------------------------------------------
     # Define optimizers
-    base_lr = 0.00001
+    base_lr = 0.0001
     max_lr = 0.005
 
     step_size = 2 * np.ceil(n_samples / batch_size)
@@ -167,7 +167,7 @@ def main():
 
     global_step = 0
     n_epochs = 3000
-    gamma = 0.99
+    gamma = 0.98
     scale_fn = lambda x: gamma ** x
     for epoch in range(n_epochs):
         start = time.time()
