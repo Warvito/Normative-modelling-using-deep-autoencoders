@@ -101,7 +101,7 @@ def main():
 
     # -------------------------------------------------------------------------------------------------------------
     # Define optimizers
-    base_lr = 0.0025
+    base_lr = 0.00001
     max_lr = 0.005
 
     step_size = 2 * np.ceil(n_samples / batch_size)
@@ -167,15 +167,11 @@ def main():
 
     global_step = 0
     n_epochs = 3000
+    gamma = 0.99
+    scale_fn = lambda x: gamma ** x
     for epoch in range(n_epochs):
         start = time.time()
 
-        # Learning rate schedule
-        if epoch in [600, 1000, 1400, 1800, 2000, 2500]:
-            base_lr = base_lr / 2
-            max_lr = max_lr / 2
-            step_size = step_size / 2
-            print('learning rate changed!')
 
         epoch_ae_loss_avg = tf.metrics.Mean()
         epoch_dc_loss_avg = tf.metrics.Mean()
@@ -183,14 +179,13 @@ def main():
         epoch_gen_loss_avg = tf.metrics.Mean()
 
         for batch, (batch_x, batch_y) in enumerate(train_dataset):
-            if epoch > 600:
-                global_step = global_step + 1
-                cycle = np.floor(1 + global_step / (2 * step_size))
-                x_lr = np.abs(global_step / step_size - 2 * cycle + 1)
-                clr = base_lr + (max_lr - base_lr) * max(0, 1 - x_lr)
-                ae_optimizer.lr = clr
-                dc_optimizer.lr = clr
-                gen_optimizer.lr = clr
+            global_step = global_step + 1
+            cycle = np.floor(1 + global_step / (2 * step_size))
+            x_lr = np.abs(global_step / step_size - 2 * cycle + 1)
+            clr = base_lr + (max_lr - base_lr) * max(0, 1 - x_lr) * scale_fn(cycle)
+            ae_optimizer.lr = clr
+            dc_optimizer.lr = clr
+            gen_optimizer.lr = clr
 
             ae_loss, dc_loss, dc_acc, gen_loss = train_step(batch_x, batch_y)
 
