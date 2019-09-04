@@ -18,7 +18,7 @@ def main():
     """"""
     # ----------------------------------------------------------------------------
     experiment_name = 'biobank_scanner1'
-    model_name = 'unsupervised_aae_deterministic_freesurfer'
+    model_name = 'unsupervised_aae'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / 'BIOBANK' / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / 'BIOBANK' / 'freesurferData.csv'

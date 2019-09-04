@@ -1,10 +1,7 @@
 """Deterministic supervised adversarial autoencoder."""
 from pathlib import Path
 import random as rn
-import time
 
-import joblib
-import tensorflow as tf
 from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
@@ -77,9 +74,6 @@ def main():
     train_dataset = train_dataset.shuffle(buffer_size=train_buf)
     train_dataset = train_dataset.batch(batch_size)
 
-    test_dataset = tf.data.Dataset.from_tensor_slices((X_test_normalized, y_test))
-    test_dataset = test_dataset.batch(batch_size)
-
     # -------------------------------------------------------------------------------------------------------------
     # Create models
     n_features = X_train_normalized.shape[1]
@@ -88,7 +82,7 @@ def main():
     z_dim = 20
 
     encoder = make_encoder_model_v1(n_features, h_dim, z_dim)
-    decoder = make_decoder_supervised_model_v1(z_dim + n_labels, n_features, h_dim)
+    decoder = make_decoder_model_v1(z_dim + n_labels, n_features, h_dim)
     discriminator = make_discriminator_model_v1(z_dim, h_dim)
 
     # -------------------------------------------------------------------------------------------------------------

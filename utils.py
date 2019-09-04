@@ -65,26 +65,26 @@ def load_demographic_data(demographic_path, ids_path):
     # demographic_df['ID'] = pd.to_numeric(demographic_df['ID'])
     demographic_df = demographic_df.dropna()
 
-    id_df = pd.read_csv(ids_path)
+    ids_df = pd.read_csv(ids_path)
     # Create a new 'ID' column to match supplementary demographic data
-    if 'Participant_ID' in id_df.columns:
+    if 'Participant_ID' in ids_df.columns:
         # For create_homogeneous_data.py output
-        id_df['ID'] = id_df['Participant_ID'].str.split('-').str[1]
+        ids_df['ID'] = ids_df['Participant_ID'].str.split('-').str[1]
     elif 'FBF_Brescia' in str(demographic_path):
-        id_df['ID'] = id_df['Image_ID'].str.split('_').str[0] + '_' + id_df['Image_ID'].str.split('_').str[1]
-        id_df['ID'] = id_df['ID'].str.split('-').str[1]
+        ids_df['ID'] = ids_df['Image_ID'].str.split('_').str[0] + '_' + ids_df['Image_ID'].str.split('_').str[1]
+        ids_df['ID'] = ids_df['ID'].str.split('-').str[1]
     else:
         # For freesurferData dataframe
-        id_df['ID'] = id_df['Image_ID'].str.split('_').str[0]
-        id_df['ID'] = id_df['ID'].str.split('-').str[1]
+        ids_df['ID'] = ids_df['Image_ID'].str.split('_').str[0]
+        ids_df['ID'] = ids_df['ID'].str.split('-').str[1]
 
-    # id_df['ID'] = pd.to_numeric(id_df['ID'])
+    # ids_df['ID'] = pd.to_numeric(ids_df['ID'])
 
     # Merge supplementary demographic data with ids
     demographic_df['ID'] = demographic_df['ID'].astype('int')
-    id_df['ID'] = id_df['ID'].astype('int')
+    ids_df['ID'] = ids_df['ID'].astype('int')
 
-    dataset = pd.merge(id_df, demographic_df, on='ID')
+    dataset = pd.merge(ids_df, demographic_df, on='ID')
 
     if 'Participant_ID_y' in dataset.columns:
         dataset['Participant_ID'] = dataset['Participant_ID_x']

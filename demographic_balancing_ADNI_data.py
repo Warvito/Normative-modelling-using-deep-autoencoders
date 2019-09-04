@@ -3,12 +3,15 @@
 Labels encoding
 "17": "Alzheimer's Disease",
 "1": "Healthy Controls",
-"26": "Significant Memory Concern (SMC)"
 "27": "Early mild cognitive impairment (EMCI)"
 "28": "Late mild cognitive impairment (LMCI)"
 
 excluded (low number of subjects)
-"18": "Mild Cognitive Impairment",
+"18": "Mild Cognitive Impairment"
+
+excluded (not the focus of the study)
+"26": "Significant Memory Concern (SMC)"
+
 """
 from pathlib import Path
 
@@ -152,7 +155,7 @@ def main():
     t_value, p_value = ttest_ind(emci_age, lmci_age)
     print('Age - EMCI vs LMCI p value {}'.format(p_value))
 
-    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 26, 27, 28])].Image_ID)
+    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 27, 28])].Image_ID)
     homogeneous_df.to_csv(experiment_dir / (dataset_name+'_homogeneous_ids.csv'), index=False)
 
 

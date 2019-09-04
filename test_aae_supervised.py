@@ -16,7 +16,7 @@ def main():
     """"""
     # ----------------------------------------------------------------------------
     experiment_name = 'biobank_scanner1'
-    model_name = 'supervised_aae_deterministic_freesurfer'
+    model_name = 'supervised_aae'
     dataset_name = 'ADNI'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
@@ -81,7 +81,7 @@ def main():
     reconstruction_df[COLUMNS_NAME] = reconstruction.numpy()
     reconstruction_df.to_csv(output_dataset_dir / 'reconstruction.csv', index=False)
 
-    encoded_df = pd.DataFrame(columns=['Participant_ID']+list(range(encoded.shape[1])))
+    encoded_df = pd.DataFrame(columns=['Participant_ID'] + list(range(encoded.shape[1])))
     encoded_df['Participant_ID'] = clinical_df['Participant_ID']
     encoded_df[list(range(encoded.shape[1]))] = encoded.numpy()
     encoded_df.to_csv(output_dataset_dir / 'encoded.csv', index=False)

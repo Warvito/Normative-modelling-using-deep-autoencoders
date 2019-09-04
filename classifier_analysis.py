@@ -18,22 +18,22 @@ def main():
     # ----------------------------------------------------------------------------
     experiment_name = 'biobank_scanner1'
     model_name = 'unsupervised_aae_deterministic_freesurfer'
-    dataset_name = 'ADNI'
+    dataset_name = 'FBF_Brescia'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    disease_label = 17
+    disease_label = 18
 
     # ----------------------------------------------------------------------------
-    output_dataset_dir = PROJECT_ROOT / 'outputs' / experiment_name / model_name / dataset_name
     ids_path = PROJECT_ROOT / 'outputs' / experiment_name / (dataset_name + '_homogeneous_ids.csv')
 
-    classifier_dir = output_dataset_dir / 'classifier_analysis'
-    classifier_dir.mkdir(exist_ok=True)
-    cv_dir = classifier_dir / 'cv'
-    cv_dir.mkdir(exist_ok=True)
+    # output_dataset_dir = PROJECT_ROOT / 'outputs' / experiment_name / model_name / dataset_name
+    # classifier_dir = output_dataset_dir / 'classifier_analysis'
+    # classifier_dir.mkdir(exist_ok=True)
+    # cv_dir = classifier_dir / 'cv'
+    # cv_dir.mkdir(exist_ok=True)
 
     # ----------------------------------------------------------------------------
     # Set random seed

@@ -1,13 +1,8 @@
-"""Script to create homogeneous samples for the ADNI data.
+"""Script to create homogeneous samples for the FBF_Brescia data.
 
 Labels encoding
-"17": "Alzheimer's Disease",
 "1": "Healthy Controls",
-"26": "Significant Memory Concern (SMC)"
-"27": "Early mild cognitive impairment (EMCI)"
-"28": "Late mild cognitive impairment (LMCI)"
-
-excluded (low number of subjects)
+"17": "Alzheimer's Disease",
 "18": "Mild Cognitive Impairment",
 """
 from pathlib import Path
@@ -42,24 +37,24 @@ def main():
     chi2, p_value, _, _ = chi2_contingency(contingency_table[[1,17]], correction=False)
     print('Gender - HC vs AD p value {}'.format(p_value))
     chi2, p_value, _, _ = chi2_contingency(contingency_table[[1,18]], correction=False)
-    print('Gender - HC vs AD p value {}'.format(p_value))
+    print('Gender - HC vs MCI p value {}'.format(p_value))
     chi2, p_value, _, _ = chi2_contingency(contingency_table[[17,18]], correction=False)
-    print('Gender - HC vs AD p value {}'.format(p_value))
+    print('Gender - MCI vs AD p value {}'.format(p_value))
 
     hc_age = dataset_df[dataset_df['Diagn'] == 1].Age.values
-    asd_age = dataset_df[dataset_df['Diagn'] == 17].Age.values
+    ad_age = dataset_df[dataset_df['Diagn'] == 17].Age.values
     mci_age = dataset_df[dataset_df['Diagn'] == 18].Age.values
 
     print(hc_age.mean())
-    print(asd_age.mean())
+    print(ad_age.mean())
     print(mci_age.mean())
 
-    t_value, p_value = ttest_ind(hc_age, asd_age)
+    t_value, p_value = ttest_ind(hc_age, ad_age)
     print('Age - HC vs AD p value {}'.format(p_value))
     t_value, p_value = ttest_ind(hc_age, mci_age)
-    print('Age - HC vs AD p value {}'.format(p_value))
-    t_value, p_value = ttest_ind(asd_age, mci_age)
-    print('Age - HC vs AD p value {}'.format(p_value))
+    print('Age - HC vs MCI p value {}'.format(p_value))
+    t_value, p_value = ttest_ind(ad_age, mci_age)
+    print('Age - MCI vs AD p value {}'.format(p_value))
 
     # hc is too young, droping some of the youngest
     dataset_corrected_df = dataset_df.drop(dataset_df[dataset_df['Diagn'] == 1].iloc[hc_age.argmin()].name, axis=0)
@@ -75,11 +70,11 @@ def main():
         hc_age = np.delete(hc_age, hc_age.argmin(), 0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
-    t_value, p_value = ttest_ind(hc_age, asd_age)
+    t_value, p_value = ttest_ind(hc_age, ad_age)
     print('Age - HC vs AD p value {}'.format(p_value))
     t_value, p_value = ttest_ind(hc_age, mci_age)
     print('Age - HC vs AD p value {}'.format(p_value))
-    t_value, p_value = ttest_ind(asd_age, mci_age)
+    t_value, p_value = ttest_ind(ad_age, mci_age)
     print('Age - HC vs AD p value {}'.format(p_value))
 
     contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)

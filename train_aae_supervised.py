@@ -5,7 +5,6 @@ import random as rn
 import time
 
 import joblib
-import tensorflow as tf
 from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import OneHotEncoder
 import numpy as np
@@ -20,7 +19,7 @@ def main():
     """"""
     # ----------------------------------------------------------------------------
     experiment_name = 'biobank_scanner1'
-    model_name = 'supervised_aae_deterministic_freesurfer'
+    model_name = 'supervised_aae'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / 'BIOBANK' / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / 'BIOBANK' / 'freesurferData.csv'
@@ -169,6 +168,7 @@ def main():
     n_epochs = 3000
     gamma = 0.98
     scale_fn = lambda x: gamma ** x
+    training_start = time.time()
     for epoch in range(n_epochs):
         start = time.time()
 
@@ -209,6 +209,8 @@ def main():
                       epoch_dc_loss_avg.result(),
                       epoch_dc_acc_avg.result(),
                       epoch_gen_loss_avg.result()))
+
+    training_time = time.time() - training_start
 
     # Save models
     encoder.save(model_dir / 'encoder.h5')
