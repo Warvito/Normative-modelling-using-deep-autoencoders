@@ -42,11 +42,14 @@ def main():
 
     hc_label = 1
     # disease_label = 17 # AD
-    disease_label = 28
+    disease_label = 27
 
     # ----------------------------------------------------------------------------
     output_dataset_dir = PROJECT_ROOT / 'outputs' / experiment_name / model_name / dataset_name
     ids_path = PROJECT_ROOT / 'outputs' / experiment_name / (dataset_name + '_homogeneous_ids.csv')
+
+    analysis_dir = output_dataset_dir / '{:02d}_vs_{:02d}'.format(hc_label, disease_label)
+    analysis_dir.mkdir(exist_ok=True)
 
     # ----------------------------------------------------------------------------
     clinical_df = load_dataset(participants_path, ids_path, freesurfer_path)
@@ -69,7 +72,7 @@ def main():
     for patch, color in zip(boxplot['boxes'], colors):
         patch.set_facecolor(color)
     ax.yaxis.grid(True)
-    plt.savefig(output_dataset_dir / 'error_analysis.png')
+    plt.savefig(analysis_dir / 'error_analysis.png')
     plt.close()
     plt.clf()
 
@@ -77,7 +80,7 @@ def main():
     effect_size = cliff_delta(error_hc.values, error_patient.values)
 
     error_df = pd.DataFrame({'pvalue': [pvalue], 'statistic': [statistic], 'effect_size': [effect_size]})
-    error_df.to_csv(output_dataset_dir / 'error_analysis.csv', index=False)
+    error_df.to_csv(analysis_dir / 'error_analysis.csv', index=False)
 
     # ----------------------------------------------------------------------------
     region_df = pd.DataFrame(columns=['regions', 'pvalue', 'effect_size'])
@@ -99,7 +102,7 @@ def main():
         region_df = region_df.append({'regions': region, 'pvalue': pvalue, 'effect_size': effect_size},
                                      ignore_index=True)
 
-    region_df.to_csv(output_dataset_dir / 'regions_analysis.csv', index=False)
+    region_df.to_csv(analysis_dir / 'regions_analysis.csv', index=False)
 
     # ----------------------------------------------------------------------------
     fpr, tpr, threshold = roc_curve(list(np.zeros_like(error_hc)) + list(np.ones_like(error_patient)),
@@ -114,7 +117,7 @@ def main():
     plt.ylim([0, 1])
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
-    plt.savefig(output_dataset_dir / 'auc_roc.png')
+    plt.savefig(analysis_dir / 'auc_roc.png')
     plt.close()
     plt.clf()
 
@@ -146,7 +149,7 @@ def main():
         plt.xlabel('Reconstruction error')
         plt.ylabel('Likelihood')
         plt.legend(loc='upper right')
-        plt.savefig(output_dataset_dir / 'likelihood.png')
+        plt.savefig(analysis_dir / 'likelihood.png')
         plt.close()
         plt.clf()
 

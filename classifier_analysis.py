@@ -17,23 +17,24 @@ PROJECT_ROOT = Path.cwd()
 def main():
     # ----------------------------------------------------------------------------
     experiment_name = 'biobank_scanner1'
-    model_name = 'unsupervised_aae_deterministic_freesurfer'
     dataset_name = 'FBF_Brescia'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    disease_label = 18
+    disease_label = 17
 
     # ----------------------------------------------------------------------------
     ids_path = PROJECT_ROOT / 'outputs' / experiment_name / (dataset_name + '_homogeneous_ids.csv')
 
-    # output_dataset_dir = PROJECT_ROOT / 'outputs' / experiment_name / model_name / dataset_name
-    # classifier_dir = output_dataset_dir / 'classifier_analysis'
-    # classifier_dir.mkdir(exist_ok=True)
-    # cv_dir = classifier_dir / 'cv'
-    # cv_dir.mkdir(exist_ok=True)
+    classifier_dir = PROJECT_ROOT / 'outputs' / experiment_name / 'classifier_analysis'
+    classifier_dir.mkdir(exist_ok=True)
+    classifier_dataset_dir = classifier_dir / dataset_name
+    classifier_dataset_dir.mkdir(exist_ok=True)
+
+    classifier_dataset_analysis_dir = classifier_dataset_dir / '{:02d}_vs_{:02d}'.format(hc_label, disease_label)
+    classifier_dataset_analysis_dir.mkdir(exist_ok=True)
 
     # ----------------------------------------------------------------------------
     # Set random seed
@@ -66,7 +67,8 @@ def main():
     n_folds = 10
     n_nested_folds = 5
 
-    cv_auc = []
+    auc_roc_df = pd.DataFrame(columns=['CV', 'auc'])
+    i_iteration = 0
 
     for i_repetition in range(n_repetitions):
         repetition_column_name = 'Prediction repetition {:02d}'.format(i_repetition)
@@ -105,15 +107,15 @@ def main():
 
             predictions = best_svm.predict_proba(x_test)
 
-            # Add predictions per test_index to age_predictions
-            # for row, value in zip(test_index, predictions):
-            #     predictions_df.iloc[row, predictions_df.columns.get_loc(repetition_column_name)] = value
 
-            # TODO: Salvar auc-roc
             auc = roc_auc_score(y_test, predictions[:,1])
-            cv_auc.append(auc)
+            auc_roc_df = auc_roc_df.append({'CV': i_iteration, 'auc': auc}, ignore_index=True)
 
-    cv_auc_mean = np.mean(cv_auc)
-    print(cv_auc_mean)
+            i_iteration = i_iteration + 1
+
+    auc_roc_df.to_csv(classifier_dataset_analysis_dir / 'auc.csv', index=False)
+    print('{:.03f}+- {:.03f}'.format(np.mean(auc_roc_df['auc'].values), 1.96*np.std(auc_roc_df['auc'].values)))
 
 
+if __name__ == "__main__":
+    main()

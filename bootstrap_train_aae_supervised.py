@@ -17,7 +17,7 @@ PROJECT_ROOT = Path.cwd()
 def main():
     """"""
     # ----------------------------------------------------------------------------
-    n_bootstrap = 20
+    n_bootstrap = 100
     experiment_name = 'biobank_scanner1'
     model_name = 'supervised_aae'
 
@@ -169,7 +169,7 @@ def main():
         # Training loop
 
         global_step = 0
-        n_epochs = 2
+        n_epochs = 20
         gamma = 0.98
         scale_fn = lambda x: gamma ** x
         training_start = time.time()
