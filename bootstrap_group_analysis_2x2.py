@@ -44,7 +44,7 @@ def main():
 
     hc_label = 1
     # disease_label = 17 # AD
-    disease_label = 17
+    disease_label = 28
 
     # ----------------------------------------------------------------------------
     experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
