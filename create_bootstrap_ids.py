@@ -13,7 +13,7 @@ PROJECT_ROOT = Path.cwd()
 def main():
     """"""
     # ----------------------------------------------------------------------------------------
-    n_bootstrap = 100
+    n_bootstrap = 1000
     experiment_name = 'biobank_scanner1'
 
     ids_path = PROJECT_ROOT / 'outputs' / experiment_name / 'cleaned_ids.csv'

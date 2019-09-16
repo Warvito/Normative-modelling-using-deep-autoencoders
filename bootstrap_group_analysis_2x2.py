@@ -1,4 +1,9 @@
-"""Script to perform the group analysis."""
+"""Script to perform the group analysis.
+
+refs:
+https://towardsdatascience.com/an-introduction-to-the-bootstrap-method-58bcb51b4d60
+https://machinelearningmastery.com/calculate-bootstrap-confidence-intervals-machine-learning-results-python/
+"""
 from pathlib import Path
 
 import pandas as pd
@@ -33,18 +38,18 @@ def gaussian_likelihood(x):
 def main():
     """"""
     # ----------------------------------------------------------------------------
-    n_bootstrap = 100
+    n_bootstrap = 1000
 
     experiment_name = 'biobank_scanner1'
     model_name = 'supervised_aae'
-    dataset_name = 'ADNI'
+    dataset_name = 'FBF_Brescia'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
     # disease_label = 17 # AD
-    disease_label = 28
+    disease_label = 18
 
     # ----------------------------------------------------------------------------
     experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
@@ -146,7 +151,7 @@ def main():
         tpr[0] = 0.0
         tprs.append(tpr)
 
-        # ----------------------------------------------------------------------------
+        ----------------------------------------------------------------------------
 
         if 'aae' in model_name:
             encoded = encoded_df[encoded_df.columns[1:]].apply(pd.to_numeric)
@@ -187,12 +192,14 @@ def main():
 
     tprs = np.array(tprs)
     mean_tprs = tprs.mean(axis=0)
-    std = tprs.std(axis=0)
 
-    tprs_upper = np.minimum(mean_tprs + 2*std, 1)
-    tprs_lower = mean_tprs - 2*std
+    tprs_upper = np.percentile(tprs, 97.5, axis=0)
+    tprs_lower = np.percentile(tprs, 2.5, axis=0)
 
-    plt.plot(base_fpr, mean_tprs, 'b',lw=2, label='AUC = {:0.3f} +- {:0.3f}'.format(np.mean(auc_roc_list), 2*np.std(auc_roc_list)))
+    plt.plot(base_fpr, mean_tprs, 'b',lw=2, label='ROC curve (AUC = {:0.3f} ; 95% CI [{:0.3f}, {:0.3f}])'.format(np.mean(auc_roc_list),
+                                                                                                    np.percentile(auc_roc_list, 2.5),
+                                                                                                    np.percentile(auc_roc_list, 97.5)))
+
     plt.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.3)
 
     plt.plot([0, 1], [0, 1], 'r--')
@@ -208,14 +215,18 @@ def main():
     auc_roc_df = pd.DataFrame(columns=['AUC-ROC'], data=auc_roc_list)
     auc_roc_df.to_csv(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'auc_rocs.csv', index=False)
 
+    # --------------------------------------------------------------------------------------------
     effect_size_df = pd.DataFrame(columns=COLUMNS_NAME, data=np.array(effect_size_list))
     effect_size_df.to_csv(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'effect_size.csv')
 
-    effect_size_df = effect_size_df.reindex(effect_size_df.quantile(0.5).sort_values().index, axis=1)
+    effect_size_df = effect_size_df.reindex(effect_size_df.mean().sort_values().index, axis=1)
 
     plt.figure(figsize=(16, 20))
-    plt.hlines(range(101), effect_size_df.quantile([.25]).values[0], effect_size_df.quantile([.75]).values[0])
-    plt.plot(effect_size_df.quantile([.5]).values[0], range(101), 'o')
+    plt.hlines(range(101),
+               np.percentile(effect_size_df, 2.5, axis=0),
+               np.percentile(effect_size_df, 97.5, axis=0))
+
+    plt.plot(effect_size_df.mean().values, range(101), 'o')
     plt.axvline(0, ls='--')
     plt.yticks(np.arange(101), effect_size_df.columns)
     plt.tight_layout()

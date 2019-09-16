@@ -15,7 +15,7 @@ PROJECT_ROOT = Path.cwd()
 def main():
     """"""
     # ----------------------------------------------------------------------------
-    n_bootstrap = 100
+    n_bootstrap = 1000
     experiment_name = 'biobank_scanner1'
     model_name = 'supervised_aae'
     dataset_name = 'FBF_Brescia'
