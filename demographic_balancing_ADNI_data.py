@@ -155,6 +155,12 @@ def main():
     t_value, p_value = ttest_ind(emci_age, lmci_age)
     print('Age - EMCI vs LMCI p value {}'.format(p_value))
 
+    hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
+    ad_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 17].Age.values
+    smc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 26].Age.values
+    emci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 27].Age.values
+    lmci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 28].Age.values
+
     homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 27, 28])].Image_ID)
     homogeneous_df.to_csv(experiment_dir / (dataset_name+'_homogeneous_ids.csv'), index=False)
 

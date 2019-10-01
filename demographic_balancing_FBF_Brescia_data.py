@@ -34,11 +34,11 @@ def main():
 
     contingency_table = pd.crosstab(dataset_df.Gender, dataset_df.Diagn)
 
-    chi2, p_value, _, _ = chi2_contingency(contingency_table[[1,17]], correction=False)
+    chi2, p_value, _, _ = chi2_contingency(contingency_table[[1, 17]], correction=False)
     print('Gender - HC vs AD p value {}'.format(p_value))
-    chi2, p_value, _, _ = chi2_contingency(contingency_table[[1,18]], correction=False)
+    chi2, p_value, _, _ = chi2_contingency(contingency_table[[1, 18]], correction=False)
     print('Gender - HC vs MCI p value {}'.format(p_value))
-    chi2, p_value, _, _ = chi2_contingency(contingency_table[[17,18]], correction=False)
+    chi2, p_value, _, _ = chi2_contingency(contingency_table[[17, 18]], correction=False)
     print('Gender - MCI vs AD p value {}'.format(p_value))
 
     hc_age = dataset_df[dataset_df['Diagn'] == 1].Age.values
@@ -59,36 +59,41 @@ def main():
     # hc is too young, droping some of the youngest
     dataset_corrected_df = dataset_df.drop(dataset_df[dataset_df['Diagn'] == 1].iloc[hc_age.argmin()].name, axis=0)
     hc_age = np.delete(hc_age, hc_age.argmin(), 0)
+    dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
-    for i in range(150):
+    for i in range(137):
         print(hc_age.argmin())
         print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].Age)
         print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].name)
         print(hc_age)
         print('')
-        dataset_corrected_df = dataset_corrected_df.drop(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].name, axis=0)
+        dataset_corrected_df = dataset_corrected_df.drop(
+            dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].name, axis=0)
         hc_age = np.delete(hc_age, hc_age.argmin(), 0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
     t_value, p_value = ttest_ind(hc_age, ad_age)
     print('Age - HC vs AD p value {}'.format(p_value))
     t_value, p_value = ttest_ind(hc_age, mci_age)
-    print('Age - HC vs AD p value {}'.format(p_value))
+    print('Age - HC vs MCI p value {}'.format(p_value))
     t_value, p_value = ttest_ind(ad_age, mci_age)
-    print('Age - HC vs AD p value {}'.format(p_value))
+    print('Age - MCI vs AD p value {}'.format(p_value))
 
     contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)
 
-    chi2, p_value, _, _ = chi2_contingency(contingency_table[[1,17]], correction=False)
+    chi2, p_value, _, _ = chi2_contingency(contingency_table[[1, 17]], correction=False)
     print('Gender - HC vs AD p value {}'.format(p_value))
-    chi2, p_value, _, _ = chi2_contingency(contingency_table[[1,18]], correction=False)
+    chi2, p_value, _, _ = chi2_contingency(contingency_table[[1, 18]], correction=False)
     print('Gender - HC vs AD p value {}'.format(p_value))
-    chi2, p_value, _, _ = chi2_contingency(contingency_table[[17,18]], correction=False)
+    chi2, p_value, _, _ = chi2_contingency(contingency_table[[17, 18]], correction=False)
     print('Gender - HC vs AD p value {}'.format(p_value))
 
+    hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
+    ad_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 17].Age.values
+    mci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 18].Age.values
 
-    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17,18])].Image_ID)
-    homogeneous_df.to_csv(experiment_dir / (dataset_name+'_homogeneous_ids.csv'), index=False)
+    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 18])].Image_ID)
+    homogeneous_df.to_csv(experiment_dir / (dataset_name + '_homogeneous_ids.csv'), index=False)
 
 
 if __name__ == "__main__":

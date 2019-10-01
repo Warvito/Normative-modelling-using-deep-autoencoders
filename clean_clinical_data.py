@@ -16,7 +16,7 @@ def main():
     """"""
     # ----------------------------------------------------------------------------------------
     experiment_name = 'biobank_scanner1'
-    dataset_name = 'ADNI'
+    dataset_name = 'PPMI'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
     ids_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'

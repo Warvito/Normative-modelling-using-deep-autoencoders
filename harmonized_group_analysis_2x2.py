@@ -34,19 +34,21 @@ def main():
     """"""
     # ----------------------------------------------------------------------------
     experiment_name = 'biobank_scanner1'
-    model_name = 'cheung_aae'
-    dataset_name = 'ADNI'
+    model_name = 'supervised_aae'
+    dataset_name = 'FBF_Brescia'
+    experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
+
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
-    freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
+    freesurfer_path = experiment_dir / (dataset_name + '_harmonizedFreesurferData.csv')
 
     hc_label = 1
     # disease_label = 17 # AD
-    disease_label = 27
+    disease_label = 18
 
     # ----------------------------------------------------------------------------
     output_dataset_dir = PROJECT_ROOT / 'outputs' / experiment_name / model_name / dataset_name
-    ids_path = PROJECT_ROOT / 'outputs' / experiment_name / (dataset_name + '_homogeneous_ids.csv')
+    ids_path = experiment_dir / (dataset_name + '_harmonized_test_ids.csv')
 
     analysis_dir = output_dataset_dir / '{:02d}_vs_{:02d}'.format(hc_label, disease_label)
     analysis_dir.mkdir(exist_ok=True)

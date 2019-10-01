@@ -8,6 +8,7 @@ import joblib
 from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import OneHotEncoder
 import numpy as np
+import tensorflow as tf
 
 from utils import COLUMNS_NAME, load_dataset
 from models import *

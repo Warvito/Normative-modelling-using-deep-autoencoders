@@ -79,29 +79,29 @@ def main():
         normalized_df = pd.read_csv(output_dataset_dir / 'normalized.csv')
         reconstruction_error_df = pd.read_csv(output_dataset_dir / 'reconstruction_error.csv')
         reconstruction_df = pd.read_csv(output_dataset_dir / 'reconstruction.csv')
-        encoded_df = pd.read_csv(output_dataset_dir / 'encoded.csv')
+        # encoded_df = pd.read_csv(output_dataset_dir / 'encoded.csv')
 
         # ----------------------------------------------------------------------------
         error_hc = reconstruction_error_df.loc[clinical_df['Diagn'] == hc_label]['Reconstruction error']
         error_patient = reconstruction_error_df.loc[clinical_df['Diagn'] == disease_label]['Reconstruction error']
 
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-        boxplot = ax.boxplot([error_hc.values, error_patient.values], notch="True", showfliers=False, patch_artist=True)
-
-        colors = ['white', 'lightgray']
-        for patch, color in zip(boxplot['boxes'], colors):
-            patch.set_facecolor(color)
-        ax.yaxis.grid(True)
-        plt.savefig(analysis_dir / 'error_analysis.png')
-        plt.close()
-        plt.clf()
-
-        statistic, pvalue = stats.mannwhitneyu(error_hc.values, error_patient.values)
-        effect_size = cliff_delta(error_hc.values, error_patient.values)
-
-        error_df = pd.DataFrame({'pvalue': [pvalue], 'statistic': [statistic], 'effect_size': [effect_size]})
-        error_df.to_csv(analysis_dir / 'error_analysis.csv', index=False)
+        # fig = plt.figure()
+        # ax = fig.add_subplot(1, 1, 1)
+        # boxplot = ax.boxplot([error_hc.values, error_patient.values], notch="True", showfliers=False, patch_artist=True)
+        #
+        # colors = ['white', 'lightgray']
+        # for patch, color in zip(boxplot['boxes'], colors):
+        #     patch.set_facecolor(color)
+        # ax.yaxis.grid(True)
+        # plt.savefig(analysis_dir / 'error_analysis.png')
+        # plt.close()
+        # plt.clf()
+        #
+        # statistic, pvalue = stats.mannwhitneyu(error_hc.values, error_patient.values)
+        # effect_size = cliff_delta(error_hc.values, error_patient.values)
+        #
+        # error_df = pd.DataFrame({'pvalue': [pvalue], 'statistic': [statistic], 'effect_size': [effect_size]})
+        # error_df.to_csv(analysis_dir / 'error_analysis.csv', index=False)
 
         # ----------------------------------------------------------------------------
         region_df = pd.DataFrame(columns=['regions', 'pvalue', 'effect_size'])
@@ -135,54 +135,54 @@ def main():
         roc_auc = auc(fpr, tpr)
         auc_roc_list.append(roc_auc)
 
-        plt.title('Receiver Operating Characteristic')
-        plt.plot(fpr, tpr, 'b', label='AUC = %0.3f' % roc_auc)
-        plt.legend(loc='lower right')
-        plt.plot([0, 1], [0, 1], 'r--')
-        plt.xlim([0, 1])
-        plt.ylim([0, 1])
-        plt.ylabel('True Positive Rate')
-        plt.xlabel('False Positive Rate')
-        plt.savefig(analysis_dir / 'auc_roc.png')
-        plt.close()
-        plt.clf()
+        # plt.title('Receiver Operating Characteristic')
+        # plt.plot(fpr, tpr, 'b', label='AUC = %0.3f' % roc_auc)
+        # plt.legend(loc='lower right')
+        # plt.plot([0, 1], [0, 1], 'r--')
+        # plt.xlim([0, 1])
+        # plt.ylim([0, 1])
+        # plt.ylabel('True Positive Rate')
+        # plt.xlabel('False Positive Rate')
+        # plt.savefig(analysis_dir / 'auc_roc.png')
+        # plt.close()
+        # plt.clf()
 
         tpr = np.interp(base_fpr, fpr, tpr)
         tpr[0] = 0.0
         tprs.append(tpr)
 
-        ----------------------------------------------------------------------------
-
-        if 'aae' in model_name:
-            encoded = encoded_df[encoded_df.columns[1:]].apply(pd.to_numeric)
-            likelihood = np.ones((encoded.shape[0], 1))
-
-            for i_latent in range(encoded.shape[1]):
-                likelihood = np.multiply(likelihood, gaussian_likelihood(encoded.values[:, i_latent])[:,np.newaxis])
-
-            likelihood_df = pd.DataFrame(columns=['Participant_ID', 'likelihood'])
-            likelihood_df['Participant_ID'] = encoded_df[encoded_df.columns[0]]
-            likelihood_df['likelihood'] = likelihood
-
-            likelihood_df.to_csv(output_dataset_dir / 'likelihood.csv', index=False)
-
-            likelihood_hc = likelihood_df.loc[clinical_df['Diagn'] == hc_label]['likelihood']
-            likelihood_patient = likelihood_df.loc[clinical_df['Diagn'] == disease_label]['likelihood']
-
-            fig, ax = plt.subplots()
-            ax.scatter(error_hc.values, likelihood_hc, color="g", marker="o", s=10, label=str('HC'))
-            ax.scatter(error_patient.values, likelihood_patient, color="r", marker="v", s=10, label=str('PATIENT'))
-
-            # Fix auto scale error https://github.com/matplotlib/matplotlib/issues/6015
-            ax.plot(error_hc.values, likelihood_hc, color='none')
-            ax.relim()
-            ax.autoscale_view()
-            plt.xlabel('Reconstruction error')
-            plt.ylabel('Likelihood')
-            plt.legend(loc='upper right')
-            plt.savefig(analysis_dir / 'likelihood.png')
-            plt.close()
-            plt.clf()
+        # ----------------------------------------------------------------------------
+        #
+        # if 'aae' in model_name:
+        #     encoded = encoded_df[encoded_df.columns[1:]].apply(pd.to_numeric)
+        #     likelihood = np.ones((encoded.shape[0], 1))
+        #
+        #     for i_latent in range(encoded.shape[1]):
+        #         likelihood = np.multiply(likelihood, gaussian_likelihood(encoded.values[:, i_latent])[:,np.newaxis])
+        #
+        #     likelihood_df = pd.DataFrame(columns=['Participant_ID', 'likelihood'])
+        #     likelihood_df['Participant_ID'] = encoded_df[encoded_df.columns[0]]
+        #     likelihood_df['likelihood'] = likelihood
+        #
+        #     likelihood_df.to_csv(output_dataset_dir / 'likelihood.csv', index=False)
+        #
+        #     likelihood_hc = likelihood_df.loc[clinical_df['Diagn'] == hc_label]['likelihood']
+        #     likelihood_patient = likelihood_df.loc[clinical_df['Diagn'] == disease_label]['likelihood']
+        #
+        #     fig, ax = plt.subplots()
+        #     ax.scatter(error_hc.values, likelihood_hc, color="g", marker="o", s=10, label=str('HC'))
+        #     ax.scatter(error_patient.values, likelihood_patient, color="r", marker="v", s=10, label=str('PATIENT'))
+        #
+        #     # Fix auto scale error https://github.com/matplotlib/matplotlib/issues/6015
+        #     ax.plot(error_hc.values, likelihood_hc, color='none')
+        #     ax.relim()
+        #     ax.autoscale_view()
+        #     plt.xlabel('Reconstruction error')
+        #     plt.ylabel('Likelihood')
+        #     plt.legend(loc='upper right')
+        #     plt.savefig(analysis_dir / 'likelihood.png')
+        #     plt.close()
+        #     plt.clf()
 
     (bootstrap_dir / dataset_name).mkdir(exist_ok=True)
     (bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label))).mkdir(exist_ok=True)
@@ -200,7 +200,7 @@ def main():
                                                                                                     np.percentile(auc_roc_list, 2.5),
                                                                                                     np.percentile(auc_roc_list, 97.5)))
 
-    plt.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.3)
+    plt.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.2)
 
     plt.plot([0, 1], [0, 1], 'r--')
     plt.xlim([0, 1])
@@ -208,12 +208,13 @@ def main():
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     plt.legend(loc='lower right')
-    plt.savefig(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'AUC-ROC.png')
+    plt.savefig(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'AUC-ROC.eps',
+                format='eps')
     plt.close()
     plt.clf()
 
-    auc_roc_df = pd.DataFrame(columns=['AUC-ROC'], data=auc_roc_list)
-    auc_roc_df.to_csv(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'auc_rocs.csv', index=False)
+    # auc_roc_df = pd.DataFrame(columns=['AUC-ROC'], data=auc_roc_list)
+    # auc_roc_df.to_csv(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'auc_rocs.csv', index=False)
 
     # --------------------------------------------------------------------------------------------
     effect_size_df = pd.DataFrame(columns=COLUMNS_NAME, data=np.array(effect_size_list))
@@ -226,11 +227,14 @@ def main():
                np.percentile(effect_size_df, 2.5, axis=0),
                np.percentile(effect_size_df, 97.5, axis=0))
 
-    plt.plot(effect_size_df.mean().values, range(101), 'o')
+    plt.plot(effect_size_df.mean().values, range(101), 's', color='k')
     plt.axvline(0, ls='--')
     plt.yticks(np.arange(101), effect_size_df.columns)
+    plt.xlabel('Effect size')
+    plt.ylabel('Brain regions')
     plt.tight_layout()
-    plt.savefig(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'Regions.png')
+    plt.savefig(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'Regions.eps',
+                format='eps')
     plt.close()
     plt.clf()
 

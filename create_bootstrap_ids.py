@@ -29,10 +29,10 @@ def main():
     ids_df = pd.read_csv(ids_path)
     n_sub = len(ids_df)
 
-    for i_bootstrap in range(n_bootstrap):
-        ids_dir = bootstrap_dir / 'ids'
-        ids_dir.mkdir(exist_ok=True)
+    ids_dir = bootstrap_dir / 'ids'
+    ids_dir.mkdir(exist_ok=True)
 
+    for i_bootstrap in range(n_bootstrap):
         bootstrap_ids = ids_df.sample(n=n_sub, replace=True)
         ids_filename = 'cleaned_bootstrap_{:03d}.csv'.format(i_bootstrap)
         bootstrap_ids.to_csv(ids_dir / ids_filename, index=False)

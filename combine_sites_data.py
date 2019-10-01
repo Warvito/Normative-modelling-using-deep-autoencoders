@@ -18,7 +18,7 @@ def merge_dataframes(paths, sep=','):
 def main():
     """"""
     # ----------------------------------------------------------------------------------------
-    data_dir = PROJECT_ROOT / 'data' / 'datasets' / 'MCIC'
+    data_dir = PROJECT_ROOT / 'data' / 'datasets' / 'FBF_Brescia'
     output_dir = data_dir
 
     # ----------------------------------------------------------------------------------------

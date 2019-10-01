@@ -1,105 +1,90 @@
 """Cheung autoencoder.
-Based on https://github.com/Lasagne/Lasagne/blob/highway_example/examples/Hidden%20factors.ipynb"""
-
+Based on https://github.com/Lasagne/Lasagne/blob/highway_example/examples/Hidden%20factors.ipynb
+"""
 from pathlib import Path
-import random
+import random as rn
 import time
 
 import joblib
+from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import OneHotEncoder
 import numpy as np
-import pandas as pd
-from sklearn.preprocessing import RobustScaler, MinMaxScaler
-from sklearn.model_selection import KFold
 import tensorflow as tf
 
-PROJECT_ROOT = Path('/media/kcl_1/HDD/PycharmProjects/aae_anomaly_detection')
+from utils import COLUMNS_NAME, load_dataset
+from models import *
 
-# Set random seed
-seed = 42
-np.random.seed(seed)
-random.seed(seed)
-tf.random.set_seed(1)
-
-# ----------------------------------------------------------------------------
-hc_file = PROJECT_ROOT / 'data' / 'BIOBANK' / 'freesurferData.h5'
-output_dir = PROJECT_ROOT / 'output' / 'cheung_autoencoder'
-# ----------------------------------------------------------------------------
-output_dir.mkdir(exist_ok=True)
-
-# Loading data
-hc_file_df = pd.read_hdf(hc_file, key='table')
-
-regions_name = hc_file_df.columns[6:]
-
-x_hc = hc_file_df[regions_name].values
-
-tiv = hc_file_df['EstimatedTotalIntraCranialVol'].values
-tiv = tiv[:, np.newaxis]
-
-x_hc = (np.true_divide(x_hc, tiv)).astype('float32')
-
-age_hc = hc_file_df['Age'].values[:, np.newaxis].astype('float32')
-
-age_scaler = MinMaxScaler(feature_range=(-1, 1))
-age_hc_normalized = age_scaler.fit_transform(age_hc)
-
-gender_hc = hc_file_df['Gender'].values[:, np.newaxis].astype('int32')
+PROJECT_ROOT = Path.cwd()
 
 
-# ----------------------------------------------------------------------------
+def main():
+    """"""
+    # ----------------------------------------------------------------------------
+    experiment_name = 'biobank_scanner1'
+    model_name = 'cheung_aae'
 
-n_folds = 10
+    participants_path = PROJECT_ROOT / 'data' / 'datasets' / 'BIOBANK' / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / 'BIOBANK' / 'freesurferData.csv'
+    ids_path = PROJECT_ROOT / 'outputs' / experiment_name / 'cleaned_ids.csv'
 
-kf = KFold(n_splits=n_folds, shuffle=True, random_state=seed)
+    # ----------------------------------------------------------------------------
+    # Create directories structure
+    experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
+    model_dir = experiment_dir / model_name
+    model_dir.mkdir(exist_ok=True)
 
-for i_fold, (train_index, test_index) in enumerate(kf.split(x_hc)):
-    print(i_fold)
-    x_train, x_test = x_hc[train_index], x_hc[test_index]
-    age_train, age_test = age_hc_normalized[train_index], age_hc_normalized[test_index]
-    gender_train, gender_test = gender_hc[train_index], gender_hc[test_index]
+    # ----------------------------------------------------------------------------
+    # Set random seed
+    random_seed = 42
+    tf.random.set_seed(random_seed)
+    np.random.seed(random_seed)
+    rn.seed(random_seed)
+
+    # ----------------------------------------------------------------------------
+    # Loading data
+    dataset_df = load_dataset(participants_path, ids_path, freesurfer_path)
+
+    # ----------------------------------------------------------------------------
+    x_data = dataset_df[COLUMNS_NAME].values
+
+    tiv = dataset_df['EstimatedTotalIntraCranialVol'].values
+    tiv = tiv[:, np.newaxis]
+
+    x_data = (np.true_divide(x_data, tiv)).astype('float32')
 
     scaler = RobustScaler()
-    x_train_normalized = scaler.fit_transform(x_train)
-    x_test_normalized = scaler.transform(x_test)
+    x_data_normalized = scaler.fit_transform(x_data)
 
-    n_features = x_train_normalized.shape[1]
+    # ----------------------------------------------------------------------------
+    age = dataset_df['Age'].values[:, np.newaxis].astype('float32')
+    enc_age = OneHotEncoder(sparse=False)
+    one_hot_age = enc_age.fit_transform(age)
 
+    gender = dataset_df['Gender'].values[:, np.newaxis].astype('float32')
+    enc_gender = OneHotEncoder(sparse=False)
+    one_hot_gender = enc_gender.fit_transform(gender)
+
+    # -------------------------------------------------------------------------------------------------------------
+    # Create the dataset iterator
+    batch_size = 256
+    n_samples = x_data.shape[0]
+
+    train_dataset = tf.data.Dataset.from_tensor_slices((x_data_normalized, one_hot_age, one_hot_gender))
+    train_dataset = train_dataset.shuffle(buffer_size=n_samples)
+    train_dataset = train_dataset.batch(batch_size)
+
+    # -------------------------------------------------------------------------------------------------------------
+    # Create models
+    n_features = x_data_normalized.shape[1]
+    h_dim = [100]
     z_dim = 75
-    n_age_labels = 1
+    n_age_labels = 27
     n_gender_labels = 2
 
+    encoder = make_cheung_encoder_model(n_features, h_dim, z_dim, n_age_labels, n_gender_labels)
+    decoder = make_cheung_decoder_model(z_dim, n_features, h_dim, n_age_labels, n_gender_labels)
 
-    # Encoder
-    def make_encoder_model():
-        inputs = tf.keras.Input(shape=(n_features,), name='Original_input')
-        x = tf.keras.layers.GaussianNoise(stddev = 0.1)(inputs)
-        x = tf.keras.layers.Dense(100, activation='selu', kernel_initializer='lecun_normal', kernel_regularizer=tf.keras.regularizers.l2(l=0.001))(x)
-        latent = tf.keras.layers.Dense(z_dim, kernel_regularizer=tf.keras.regularizers.l2(l=0.001), activation='linear', name='Latent_variables')(x)
-        pred_age = tf.keras.layers.Dense(n_age_labels, kernel_regularizer=tf.keras.regularizers.l2(l=0.001), activation='linear')(x)
-        pred_gender = tf.keras.layers.Dense(n_gender_labels, kernel_regularizer=tf.keras.regularizers.l2(l=0.001), activation='softmax')(x)
-
-        model = tf.keras.Model(inputs=inputs, outputs=[latent, pred_age, pred_gender], name='Encoder')
-        return model
-
-
-    encoder = make_encoder_model()
-
-
-    # Decoder
-    def make_decoder_model():
-        inputted_latent = tf.keras.Input(shape=(z_dim,), name='Latent_variables')
-        age = tf.keras.Input(shape=(n_age_labels,), dtype='float32')
-        gender = tf.keras.Input(shape=(n_gender_labels,), dtype='float32')
-
-        x = tf.keras.layers.concatenate([inputted_latent, age, gender], axis=-1)
-        x = tf.keras.layers.Dense(100, activation='selu', kernel_initializer='lecun_normal', kernel_regularizer=tf.keras.regularizers.l2(l=0.001))(x)
-        reconstruction = tf.keras.layers.Dense(n_features, kernel_regularizer=tf.keras.regularizers.l2(l=0.001), activation='linear', name='Reconstruction')(x)
-        model = tf.keras.Model(inputs=[inputted_latent, age, gender], outputs=reconstruction, name='Decoder')
-        return model
-
-
-    decoder = make_decoder_model()
-
+    # -------------------------------------------------------------------------------------------------------------
     # Multipliers
     alpha = 1.0
     beta = 10.0
@@ -112,7 +97,6 @@ for i_fold, (train_index, test_index) in enumerate(kf.split(x_hc)):
     # Supervised cost
     cat_loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=False)
 
-
     # Unsupervised cross-covariance cost
     def xcov_loss_fn(latent, observed, batch_size):
         latent_centered = latent - tf.reduce_mean(latent, axis=0, keepdims=True)
@@ -122,47 +106,66 @@ for i_fold, (train_index, test_index) in enumerate(kf.split(x_hc)):
 
         return xcov_loss
 
-
     optimizer = tf.keras.optimizers.Adadelta(lr=1.0, rho=0.95, epsilon=1e-6, decay=10e-5)
 
-    # Create tensorflow database
-    batch_size = 256
+    # -------------------------------------------------------------------------------------------------------------
+    # Training function
+    @tf.function
+    def train_step(batch_x, batch_age, batch_gender):
+        with tf.GradientTape() as ae_tape:
+            encoder_output, age_output, gender_output = encoder(batch_x, training=True)
+            decoder_output = decoder([encoder_output, age_output, gender_output], training=True)
 
-    dataset = tf.data.Dataset.from_tensor_slices((x_train_normalized, age_train, gender_train))
-    dataset = dataset.shuffle(batch_size * 10)
-    dataset = dataset.batch(batch_size)
-    dataset = dataset.prefetch(10)
+            recon_loss = alpha * mse_loss_fn(batch_x, decoder_output)
 
+            age_loss = cat_loss_fn(batch_age, age_output)
+            gender_loss = cat_loss_fn(batch_gender, gender_output)
+            cat_loss = beta * (age_loss + gender_loss)
+
+            xcov_loss = gamma * xcov_loss_fn(encoder_output,
+                                             tf.concat([age_output, gender_output], axis=-1),
+                                             tf.cast(tf.shape(batch_x)[0], tf.float32))
+
+            ae_loss = recon_loss + cat_loss + xcov_loss
+
+        gradients = ae_tape.gradient(ae_loss, encoder.trainable_variables + decoder.trainable_variables)
+        optimizer.apply_gradients(zip(gradients, encoder.trainable_variables + decoder.trainable_variables))
+
+        return ae_loss, recon_loss, age_loss, gender_loss, xcov_loss
+
+    # -------------------------------------------------------------------------------------------------------------
     n_epochs = 1000
-
     for epoch in range(n_epochs):
         start = time.time()
-        loss_epoch = 0
-        for batch, (batch_x, batch_age, batch_gender) in enumerate(dataset):
-            # print('')
-            with tf.GradientTape() as ae_tape:
-                encoder_output, age_output, gender_output = encoder(batch_x, training=True)
-                decoder_output = decoder([encoder_output, age_output, gender_output], training=True)
 
-                recon_loss = alpha * mse_loss_fn(batch_x, decoder_output)
-                age_loss = mse_loss_fn(batch_age, age_output)
-                gender_loss = cat_loss_fn(tf.squeeze(tf.one_hot(batch_gender, n_gender_labels),axis=1), gender_output)
-                cat_loss = beta * (age_loss+gender_loss)
-                xcov_loss = gamma * xcov_loss_fn(encoder_output, tf.concat([age_output, tf.squeeze(tf.one_hot(batch_gender, n_gender_labels),axis=1)],axis=-1), tf.cast(tf.shape(batch_x)[0], tf.float32))
-                # TENTAR UM XCOV PARA CADA VARIAVEL
-                ae_loss = recon_loss + cat_loss + xcov_loss
-
-            gradients = ae_tape.gradient(ae_loss, encoder.trainable_variables + decoder.trainable_variables)
-            optimizer.apply_gradients(zip(gradients, encoder.trainable_variables + decoder.trainable_variables))
+        epoch_ae_loss_avg = tf.metrics.Mean()
+        epoch_xcov_loss_avg = tf.metrics.Mean()
 
 
-            loss_epoch += ae_loss.numpy()
+        for batch, (batch_x, batch_age, batch_gender) in enumerate(train_dataset):
+            pass
+            ae_loss, recon_loss, age_loss, gender_loss, xcov_loss = train_step(batch_x, batch_age, batch_gender)
+
+            epoch_ae_loss_avg(ae_loss)
+            epoch_xcov_loss_avg(xcov_loss)
 
         epoch_time = time.time() - start
-        print('EPOCH: {}, TIME: {}, ETA: {},  AE_LOSS: {}, xcov: {}'.format(epoch + 1, epoch_time,
-                                                                  epoch_time * (n_epochs - epoch), ae_loss.numpy(), xcov_loss.numpy()))
+        print('{:4d}: TIME: {:.2f} ETA: {:.2f} AE_LOSS: {:.4f} XCOV_LOSS: {:.4f}' \
+              .format(epoch, epoch_time,
+                      epoch_time * (n_epochs - epoch),
+                      epoch_ae_loss_avg.result(),
+                      epoch_xcov_loss_avg.result()))
+
+    # Save models
+    encoder.save(model_dir / 'encoder.h5')
+    decoder.save(model_dir / 'decoder.h5')
+
+    # Save scaler
+    joblib.dump(scaler, model_dir / 'scaler.joblib')
+
+    joblib.dump(enc_age, model_dir / 'age_encoder.joblib')
+    joblib.dump(enc_gender, model_dir / 'gender_encoder.joblib')
 
 
-    tf.keras.models.save_model(encoder, output_dir / ('encoder_%02d.h5' % i_fold))
-    tf.keras.models.save_model(decoder, output_dir / ('decoder_%02d.h5' % i_fold))
-    joblib.dump(scaler, output_dir / ('scaler_%02d.joblib' % i_fold))
+if __name__ == "__main__":
+    main()
