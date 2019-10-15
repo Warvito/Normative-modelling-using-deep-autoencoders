@@ -17,13 +17,13 @@ def main():
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
     experiment_name = 'biobank_scanner1'
-    dataset_name = 'PPMI'
+    dataset_name = 'ADNI'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    disease_label = 24
+    disease_label = 17
 
     # ----------------------------------------------------------------------------
     # Set random seed
@@ -35,14 +35,15 @@ def main():
     classifier_dataset_dir = classifier_dir / dataset_name
     classifier_dataset_analysis_dir = classifier_dataset_dir / '{:02d}_vs_{:02d}'.format(hc_label, disease_label)
     ids_dir = classifier_dataset_analysis_dir / 'ids'
-    auc_bootstrap = []
+    auc_bootstrap_train = []
+    auc_bootstrap_test = []
     # ----------------------------------------------------------------------------
     for i_bootstrap in range(n_bootstrap):
         # Salvar apenas as aucs
-        ids_filename = 'homogeneous_bootstrap_{:03d}.csv'.format(i_bootstrap)
-        ids_path = ids_dir / ids_filename
+        ids_filename_train = 'homogeneous_bootstrap_{:03d}_train.csv'.format(i_bootstrap)
+        ids_path_train = ids_dir / ids_filename_train
 
-        dataset_df = load_dataset(participants_path, ids_path, freesurfer_path)
+        dataset_df = load_dataset(participants_path, ids_path_train, freesurfer_path)
 
         x_data = dataset_df[COLUMNS_NAME].values
 
@@ -57,48 +58,68 @@ def main():
         y_data = np.concatenate((np.zeros(sum(dataset_df['Diagn'] == hc_label)),
                                  np.ones(sum(dataset_df['Diagn'] == disease_label))))
 
-        n_folds = 10
+        print('Running bootstrap {:02d}'.format(i_bootstrap))
+
+        # Scaling using inter-quartile
+        scaler = RobustScaler()
+        x_data = scaler.fit_transform(x_data)
+
+        # Systematic search for best hyperparameters
+        svm = SVC(kernel='linear', probability=True)
+
+        search_space = {'C': [2 ** -7, 2 ** -5, 2 ** -3, 2 ** -1, 2 ** 0, 2 ** 1, 2 ** 3, 2 ** 5, 2 ** 7]}
         n_nested_folds = 5
+        nested_skf = StratifiedKFold(n_splits=n_nested_folds, shuffle=True, random_state=random_seed)
 
-        auc_list = []
-        skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_seed)
-        for i_fold, (train_index, test_index) in enumerate(skf.split(x_data, y_data)):
-            print('Running bootstrap {:02d}, fold {:02d}'.format(i_bootstrap, i_fold))
+        gridsearch = GridSearchCV(svm,
+                                  param_grid=search_space,
+                                  scoring='roc_auc',
+                                  refit=True, cv=nested_skf,
+                                  verbose=3, n_jobs=1)
 
-            x_train, x_test = x_data[train_index], x_data[test_index]
-            y_train, y_test = y_data[train_index], y_data[test_index]
+        gridsearch.fit(x_data, y_data)
 
-            # Scaling using inter-quartile
-            scaler = RobustScaler()
-            x_train = scaler.fit_transform(x_train)
-            x_test = scaler.transform(x_test)
+        best_svm = gridsearch.best_estimator_
 
-            # Systematic search for best hyperparameters
-            svm = SVC(kernel='linear', probability=True)
+        predictions = best_svm.predict_proba(x_data)
 
-            search_space = {'C': [2 ** -7, 2 ** -5, 2 ** -3, 2 ** -1, 2 ** 0, 2 ** 1, 2 ** 3, 2 ** 5, 2 ** 7]}
+        auc = roc_auc_score(y_data, predictions[:, 1])
 
-            nested_skf = StratifiedKFold(n_splits=n_nested_folds, shuffle=True, random_state=random_seed)
+        auc_bootstrap_train.append(auc)
 
-            gridsearch = GridSearchCV(svm,
-                                      param_grid=search_space,
-                                      scoring='roc_auc',
-                                      refit=True, cv=nested_skf,
-                                      verbose=3, n_jobs=1)
+        print('AUC = {:.03f}'.format(auc))
 
-            gridsearch.fit(x_train, y_train)
+        # -----------------------------------------------------------------
+        ids_filename_test = 'homogeneous_bootstrap_{:03d}_test.csv'.format(i_bootstrap)
+        ids_path_test = ids_dir / ids_filename_test
 
-            best_svm = gridsearch.best_estimator_
+        dataset_df = load_dataset(participants_path, ids_path_test, freesurfer_path)
 
-            predictions = best_svm.predict_proba(x_test)
+        x_test = dataset_df[COLUMNS_NAME].values
 
-            auc = roc_auc_score(y_test, predictions[:,1])
-            auc_list.append(auc)
+        tiv = dataset_df['EstimatedTotalIntraCranialVol'].values
+        tiv = tiv[:, np.newaxis]
 
-        auc_bootstrap.append(np.mean(np.array(auc_list)))
-        print('AUC = {:.03f}'.format(np.mean(np.array(auc_list))))
+        x_test = (np.true_divide(x_test, tiv)).astype('float32')
 
-    np.save(classifier_dataset_analysis_dir / 'aucs.npy',np.array(auc_bootstrap))
+        x_test = np.concatenate((x_test[dataset_df['Diagn'] == hc_label],
+                                 x_test[dataset_df['Diagn'] == disease_label]), axis=0)
+
+        y_test = np.concatenate((np.zeros(sum(dataset_df['Diagn'] == hc_label)),
+                                 np.ones(sum(dataset_df['Diagn'] == disease_label))))
+
+        x_test = scaler.transform(x_test)
+
+        predictions = best_svm.predict_proba(x_test)
+
+        auc = roc_auc_score(y_test, predictions[:, 1])
+
+        auc_bootstrap_test.append(auc)
+
+        print('AUC = {:.03f}'.format(auc))
+
+    np.save(classifier_dataset_analysis_dir / 'aucs_train.npy', np.array(auc_bootstrap_train))
+    np.save(classifier_dataset_analysis_dir / 'aucs_test.npy', np.array(auc_bootstrap_test))
 
 
 if __name__ == "__main__":
