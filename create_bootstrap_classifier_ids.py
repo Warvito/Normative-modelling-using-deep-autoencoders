@@ -18,7 +18,7 @@ def main():
     n_bootstrap = 1000
 
     experiment_name = 'biobank_scanner1'
-    dataset_name = 'PPMI'
+    dataset_name = 'ADNI'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
 
@@ -55,9 +55,15 @@ def main():
     n_sub = len(dataset_df)
 
     for i_bootstrap in range(n_bootstrap):
-        bootstrap_ids = dataset_df.sample(n=n_sub, replace=True)
-        ids_filename = 'homogeneous_bootstrap_{:03d}.csv'.format(i_bootstrap)
+        bootstrap_ids = dataset_df.sample(n=n_sub, replace=True, random_state=i_bootstrap)
+
+        ids_filename = 'homogeneous_bootstrap_{:03d}_train.csv'.format(i_bootstrap)
         bootstrap_ids.to_csv(ids_dir / ids_filename, index=False)
+
+        not_sampled = ~dataset_df['Image_ID'].isin(bootstrap_ids['Image_ID'])
+        bootstrap_ids_test = dataset_df[not_sampled]
+        ids_filename = 'homogeneous_bootstrap_{:03d}_test.csv'.format(i_bootstrap)
+        bootstrap_ids_test.to_csv(ids_dir / ids_filename, index=False)
 
 
 if __name__ == "__main__":
