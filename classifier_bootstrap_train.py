@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import RobustScaler
-from sklearn.svm import SVC
+from skrvm import RVC
 
 from utils import COLUMNS_NAME, load_dataset
 
@@ -18,13 +18,13 @@ def main():
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
     experiment_name = 'biobank_scanner1'
-    dataset_name = 'FBF_Brescia'
+    dataset_name = 'ADNI'
 
     participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    disease_label = 18
+    disease_label = 27
 
     # ----------------------------------------------------------------------------
     # Set random seed
@@ -67,25 +67,11 @@ def main():
         scaler = RobustScaler()
         x_data = scaler.fit_transform(x_data)
 
-        # Systematic search for best hyperparameters
-        svm = SVC(kernel='linear', probability=True)
+        rvm = RVC(kernel='linear')
+        rvm.fit(x_data, y_data)
 
-        search_space = {'C': [2 ** -7, 2 ** -5, 2 ** -3, 2 ** -1, 2 ** 0, 2 ** 1, 2 ** 3, 2 ** 5, 2 ** 7]}
-        n_nested_folds = 5
-        nested_skf = StratifiedKFold(n_splits=n_nested_folds, shuffle=True, random_state=random_seed)
-
-        gridsearch = GridSearchCV(svm,
-                                  param_grid=search_space,
-                                  scoring='roc_auc',
-                                  refit=True, cv=nested_skf,
-                                  verbose=3, n_jobs=1)
-
-        gridsearch.fit(x_data, y_data)
-
-        best_svm = gridsearch.best_estimator_
-
-        pred = best_svm.predict(x_data)
-        predictions_proba = best_svm.predict_proba(x_data)
+        pred = rvm.predict(x_data)
+        predictions_proba = rvm.predict_proba(x_data)
 
         auc = roc_auc_score(y_data, predictions_proba[:, 1])
 
@@ -117,8 +103,8 @@ def main():
 
         x_test = scaler.transform(x_test)
 
-        pred = best_svm.predict(x_test)
-        predictions_proba = best_svm.predict_proba(x_test)
+        pred = rvm.predict(x_test)
+        predictions_proba = rvm.predict_proba(x_test)
 
         auc = roc_auc_score(y_test, predictions_proba[:, 1])
 
