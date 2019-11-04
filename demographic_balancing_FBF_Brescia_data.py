@@ -92,6 +92,8 @@ def main():
     ad_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 17].Age.values
     mci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 18].Age.values
 
+    print(f_oneway(hc_age, ad_age, mci_age))
+
     homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 18])].Image_ID)
     homogeneous_df.to_csv(experiment_dir / (dataset_name + '_homogeneous_ids.csv'), index=False)
 

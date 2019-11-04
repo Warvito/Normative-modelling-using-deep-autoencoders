@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
-from scipy.stats import chi2_contingency, ttest_ind
+from scipy.stats import chi2_contingency, ttest_ind, f_oneway
 
 from utils import load_dataset
 
@@ -160,6 +160,8 @@ def main():
     smc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 26].Age.values
     emci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 27].Age.values
     lmci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 28].Age.values
+
+    pritn(f_oneway(hc_age, ad_age, emci_age, lmci_age))
 
     homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 27, 28])].Image_ID)
     homogeneous_df.to_csv(experiment_dir / (dataset_name+'_homogeneous_ids.csv'), index=False)
