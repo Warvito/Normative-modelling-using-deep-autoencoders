@@ -2,8 +2,24 @@
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 
 PROJECT_ROOT = Path.cwd()
+
+
+def cliff_delta(X, Y):
+    """Calculate the effect size using the Cliff's delta."""
+    lx = len(X)
+    ly = len(Y)
+    mat = np.zeros((lx, ly))
+    for i in range(0, lx):
+        for j in range(0, ly):
+            if X[i] > Y[j]:
+                mat[i, j] = 1
+            elif Y[j] > X[i]:
+                mat[i, j] = -1
+
+    return (np.sum(mat)) / (lx * ly)
 
 
 def load_dataset(demographic_path, ids_path, freesurfer_path):
@@ -202,8 +218,6 @@ COLUMNS_NAME = ['Left-Lateral-Ventricle',
                 'rh_temporalpole_volume',
                 'rh_transversetemporal_volume',
                 'rh_insula_volume']
-
-
 
 DATASETS_REPLACE_DICT = {
     'BIOBANK-SCANNER01': 0,

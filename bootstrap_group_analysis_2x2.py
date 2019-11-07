@@ -1,8 +1,11 @@
 """Script to perform the group analysis.
 
-refs:
-https://towardsdatascience.com/an-introduction-to-the-bootstrap-method-58bcb51b4d60
-https://machinelearningmastery.com/calculate-bootstrap-confidence-intervals-machine-learning-results-python/
+Creates the figures 3 and 4 from the paper
+
+References:
+    https://towardsdatascience.com/an-introduction-to-the-bootstrap-method-58bcb51b4d60
+    https://machinelearningmastery.com/calculate-bootstrap-confidence-intervals-machine-learning-results-python/
+    https://stats.stackexchange.com/questions/186337/average-roc-for-repeated-10-fold-cross-validation-with-probability-estimates
 """
 from pathlib import Path
 
@@ -13,49 +16,34 @@ from scipy.stats import norm
 from scipy import stats
 from sklearn.metrics import roc_curve, auc
 
-from utils import COLUMNS_NAME, load_dataset
+from utils import COLUMNS_NAME, load_dataset, cliff_delta
 
 PROJECT_ROOT = Path.cwd()
 
 
-def cliff_delta(X, Y):
-    lx = len(X)
-    ly = len(Y)
-    mat = np.zeros((lx, ly))
-    for i in range(0, lx):
-        for j in range(0, ly):
-            if X[i] > Y[j]:
-                mat[i, j] = 1
-            elif Y[j] > X[i]:
-                mat[i, j] = -1
-
-    return (np.sum(mat)) / (lx * ly)
-
-
 def gaussian_likelihood(x):
+    """Calculate the likelihood a using the Gaussian distribution."""
     return np.exp(norm.logpdf(x, loc=0, scale=1))
 
+
 def main():
-    """"""
+    """Perform the group analysis."""
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
 
-    experiment_name = 'biobank_scanner1'
     model_name = 'supervised_aae'
-    dataset_name = 'FBF_Brescia'
+    dataset_name = 'ADNI'
 
-    participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
-    freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
+    participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    # disease_label = 17 # AD
-    disease_label = 18
+    disease_label = 17
 
     # ----------------------------------------------------------------------------
-    experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
-    bootstrap_dir = experiment_dir / 'bootstrap_analysis'
+    bootstrap_dir = PROJECT_ROOT / 'outputs' / 'bootstrap_analysis'
     model_dir = bootstrap_dir / model_name
-    ids_path = PROJECT_ROOT / 'outputs' / experiment_name / (dataset_name + '_homogeneous_ids.csv')
+    ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
 
     tprs = []
     base_fpr = np.linspace(0, 1, 101)
@@ -79,31 +67,13 @@ def main():
         normalized_df = pd.read_csv(output_dataset_dir / 'normalized.csv')
         reconstruction_error_df = pd.read_csv(output_dataset_dir / 'reconstruction_error.csv')
         reconstruction_df = pd.read_csv(output_dataset_dir / 'reconstruction.csv')
-        # encoded_df = pd.read_csv(output_dataset_dir / 'encoded.csv')
 
         # ----------------------------------------------------------------------------
         error_hc = reconstruction_error_df.loc[clinical_df['Diagn'] == hc_label]['Reconstruction error']
         error_patient = reconstruction_error_df.loc[clinical_df['Diagn'] == disease_label]['Reconstruction error']
 
-        # fig = plt.figure()
-        # ax = fig.add_subplot(1, 1, 1)
-        # boxplot = ax.boxplot([error_hc.values, error_patient.values], notch="True", showfliers=False, patch_artist=True)
-        #
-        # colors = ['white', 'lightgray']
-        # for patch, color in zip(boxplot['boxes'], colors):
-        #     patch.set_facecolor(color)
-        # ax.yaxis.grid(True)
-        # plt.savefig(analysis_dir / 'error_analysis.png')
-        # plt.close()
-        # plt.clf()
-        #
-        # statistic, pvalue = stats.mannwhitneyu(error_hc.values, error_patient.values)
-        # effect_size = cliff_delta(error_hc.values, error_patient.values)
-        #
-        # error_df = pd.DataFrame({'pvalue': [pvalue], 'statistic': [statistic], 'effect_size': [effect_size]})
-        # error_df.to_csv(analysis_dir / 'error_analysis.csv', index=False)
-
         # ----------------------------------------------------------------------------
+        # Compute effect size of the brain regions for the bootstrap iteration
         region_df = pd.DataFrame(columns=['regions', 'pvalue', 'effect_size'])
         for region in COLUMNS_NAME:
             x_patient = normalized_df.loc[clinical_df['Diagn'] == disease_label][region]
@@ -115,7 +85,7 @@ def main():
             diff_hc = np.abs(x_hc.values - recon_hc.values)
             diff_patient = np.abs(x_patient.values - recon_patient.values)
 
-            statistic, pvalue = stats.mannwhitneyu(diff_hc, diff_patient)
+            _, pvalue = stats.mannwhitneyu(diff_hc, diff_patient)
             effect_size = cliff_delta(diff_hc, diff_patient)
 
             print('{:}:{:6.4f}'.format(region, pvalue))
@@ -128,77 +98,42 @@ def main():
         region_df.to_csv(analysis_dir / 'regions_analysis.csv', index=False)
 
         # ----------------------------------------------------------------------------
-        # https://stats.stackexchange.com/questions/186337/average-roc-for-repeated-10-fold-cross-validation-with-probability-estimates
-        fpr, tpr, threshold = roc_curve(list(np.zeros_like(error_hc)) + list(np.ones_like(error_patient)),
-                                        list(error_hc) + list(error_patient))
+        # Compute AUC-ROC for the bootstrap iteration
+        fpr, tpr, _ = roc_curve(list(np.zeros_like(error_hc)) + list(np.ones_like(error_patient)),
+                                list(error_hc) + list(error_patient))
 
         roc_auc = auc(fpr, tpr)
         auc_roc_list.append(roc_auc)
-
-        # plt.title('Receiver Operating Characteristic')
-        # plt.plot(fpr, tpr, 'b', label='AUC = %0.3f' % roc_auc)
-        # plt.legend(loc='lower right')
-        # plt.plot([0, 1], [0, 1], 'r--')
-        # plt.xlim([0, 1])
-        # plt.ylim([0, 1])
-        # plt.ylabel('True Positive Rate')
-        # plt.xlabel('False Positive Rate')
-        # plt.savefig(analysis_dir / 'auc_roc.png')
-        # plt.close()
-        # plt.clf()
 
         tpr = np.interp(base_fpr, fpr, tpr)
         tpr[0] = 0.0
         tprs.append(tpr)
 
-        # ----------------------------------------------------------------------------
-        #
-        # if 'aae' in model_name:
-        #     encoded = encoded_df[encoded_df.columns[1:]].apply(pd.to_numeric)
-        #     likelihood = np.ones((encoded.shape[0], 1))
-        #
-        #     for i_latent in range(encoded.shape[1]):
-        #         likelihood = np.multiply(likelihood, gaussian_likelihood(encoded.values[:, i_latent])[:,np.newaxis])
-        #
-        #     likelihood_df = pd.DataFrame(columns=['Participant_ID', 'likelihood'])
-        #     likelihood_df['Participant_ID'] = encoded_df[encoded_df.columns[0]]
-        #     likelihood_df['likelihood'] = likelihood
-        #
-        #     likelihood_df.to_csv(output_dataset_dir / 'likelihood.csv', index=False)
-        #
-        #     likelihood_hc = likelihood_df.loc[clinical_df['Diagn'] == hc_label]['likelihood']
-        #     likelihood_patient = likelihood_df.loc[clinical_df['Diagn'] == disease_label]['likelihood']
-        #
-        #     fig, ax = plt.subplots()
-        #     ax.scatter(error_hc.values, likelihood_hc, color="g", marker="o", s=10, label=str('HC'))
-        #     ax.scatter(error_patient.values, likelihood_patient, color="r", marker="v", s=10, label=str('PATIENT'))
-        #
-        #     # Fix auto scale error https://github.com/matplotlib/matplotlib/issues/6015
-        #     ax.plot(error_hc.values, likelihood_hc, color='none')
-        #     ax.relim()
-        #     ax.autoscale_view()
-        #     plt.xlabel('Reconstruction error')
-        #     plt.ylabel('Likelihood')
-        #     plt.legend(loc='upper right')
-        #     plt.savefig(analysis_dir / 'likelihood.png')
-        #     plt.close()
-        #     plt.clf()
-
     (bootstrap_dir / dataset_name).mkdir(exist_ok=True)
-    (bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label))).mkdir(exist_ok=True)
+    comparison_dir = bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label))
+    comparison_dir.mkdir(exist_ok=True)
 
+    # Save regions effect sizes
+    effect_size_df = pd.DataFrame(columns=COLUMNS_NAME, data=np.array(effect_size_list))
+    effect_size_df.to_csv(comparison_dir / 'effect_size.csv')
 
+    # Save AUC bootstrap values
     auc_roc_list = np.array(auc_roc_list)
+    auc_roc_df = pd.DataFrame(columns=['AUC-ROC'], data=auc_roc_list)
+    auc_roc_df.to_csv(comparison_dir / 'auc_rocs.csv', index=False)
 
     tprs = np.array(tprs)
-    mean_tprs = tprs.mean(axis=0)
 
+    # ----------------------------------------------------------------------------
+    # Create Figure 3 of the paper
+    mean_tprs = tprs.mean(axis=0)
     tprs_upper = np.percentile(tprs, 97.5, axis=0)
     tprs_lower = np.percentile(tprs, 2.5, axis=0)
 
-    plt.plot(base_fpr, mean_tprs, 'b',lw=2, label='ROC curve (AUC = {:0.3f} ; 95% CI [{:0.3f}, {:0.3f}])'.format(np.mean(auc_roc_list),
-                                                                                                    np.percentile(auc_roc_list, 2.5),
-                                                                                                    np.percentile(auc_roc_list, 97.5)))
+    plt.plot(base_fpr, mean_tprs, 'b', lw=2,
+             label='ROC curve (AUC = {:0.3f} ; 95% CI [{:0.3f}, {:0.3f}])'.format(np.mean(auc_roc_list),
+                                                                                  np.percentile(auc_roc_list, 2.5),
+                                                                                  np.percentile(auc_roc_list, 97.5)))
 
     plt.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.2)
 
@@ -208,18 +143,12 @@ def main():
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     plt.legend(loc='lower right')
-    plt.savefig(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'AUC-ROC.eps',
-                format='eps')
+    plt.savefig(comparison_dir / 'AUC-ROC.eps', format='eps')
     plt.close()
     plt.clf()
 
-    # auc_roc_df = pd.DataFrame(columns=['AUC-ROC'], data=auc_roc_list)
-    # auc_roc_df.to_csv(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'auc_rocs.csv', index=False)
-
     # --------------------------------------------------------------------------------------------
-    effect_size_df = pd.DataFrame(columns=COLUMNS_NAME, data=np.array(effect_size_list))
-    effect_size_df.to_csv(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'effect_size.csv')
-
+    # Create Figure 4 of the paper
     effect_size_df = effect_size_df.reindex(effect_size_df.mean().sort_values().index, axis=1)
 
     plt.figure(figsize=(16, 20))
@@ -233,10 +162,10 @@ def main():
     plt.xlabel('Effect size')
     plt.ylabel('Brain regions')
     plt.tight_layout()
-    plt.savefig(bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label)) / 'Regions.eps',
-                format='eps')
+    plt.savefig(comparison_dir / 'Regions.eps', format='eps')
     plt.close()
     plt.clf()
+
 
 if __name__ == "__main__":
     main()

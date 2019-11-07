@@ -1,5 +1,5 @@
 """
-Script to create figure X in the paper
+Script to create Figure 2 of the paper.
 """
 
 from pathlib import Path
@@ -14,23 +14,21 @@ PROJECT_ROOT = Path.cwd()
 
 
 def main():
-    """"""
+    """Create elements for figure 2 of the paper"""
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
-
-    experiment_name = 'biobank_scanner1'
     model_name = 'supervised_aae'
 
     # ----------------------------------------------------------------------------
     dataset_name = 'ADNI'
-    participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
-    freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
-    ids_path = PROJECT_ROOT / 'outputs' / experiment_name / (dataset_name + '_homogeneous_ids.csv')
+    participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
+    ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
     adni_df = load_dataset(participants_path, ids_path, freesurfer_path)
 
     # ----------------------------------------------------------------------------
-    experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
-    bootstrap_dir = experiment_dir / 'bootstrap_analysis'
+    outputs_dir = PROJECT_ROOT / 'outputs'
+    bootstrap_dir = outputs_dir / 'bootstrap_analysis'
     model_dir = bootstrap_dir / model_name
 
     mean_adni_list = []
@@ -64,15 +62,12 @@ def main():
 
     # ----------------------------------------------------------------------------
     dataset_name = 'FBF_Brescia'
-    participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
-    freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
-    ids_path = PROJECT_ROOT / 'outputs' / experiment_name / (dataset_name + '_homogeneous_ids.csv')
+    participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
+    ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
     brescia_df = load_dataset(participants_path, ids_path, freesurfer_path)
 
     # ----------------------------------------------------------------------------
-    experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
-    bootstrap_dir = experiment_dir / 'bootstrap_analysis'
-    model_dir = bootstrap_dir / model_name
 
     mean_brescia_list = []
 
@@ -98,9 +93,10 @@ def main():
                np.percentile(mean_brescia_list, 97.5, axis=0))
 
     plt.plot(np.mean(mean_brescia_list, axis=0), range(3), 's', color='k')
-    plt.savefig(bootstrap_dir / 'BRESCIA.eps', format='eps')
+    plt.savefig(bootstrap_dir / 'TOMC.eps', format='eps')
     plt.close()
     plt.clf()
+
 
 if __name__ == "__main__":
     main()

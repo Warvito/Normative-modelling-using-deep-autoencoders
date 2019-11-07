@@ -1,29 +1,14 @@
-"""
-Script to perform the mass-univariate analysis
-
-"""
+"""Script to perform the mass-univariate analysis"""
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 
-from utils import COLUMNS_NAME, load_dataset
+from utils import COLUMNS_NAME, load_dataset, cliff_delta
 
 PROJECT_ROOT = Path.cwd()
 
-def cliff_delta(X, Y):
-    lx = len(X)
-    ly = len(Y)
-    mat = np.zeros((lx, ly))
-    for i in range(0, lx):
-        for j in range(0, ly):
-            if X[i] > Y[j]:
-                mat[i, j] = 1
-            elif Y[j] > X[i]:
-                mat[i, j] = -1
-
-    return (np.sum(mat)) / (lx * ly)
 
 def main():
     # ----------------------------------------------------------------------------

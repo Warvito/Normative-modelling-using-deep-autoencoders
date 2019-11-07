@@ -5,7 +5,6 @@ import random as rn
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import RobustScaler
 from skrvm import RVC
 
@@ -15,16 +14,16 @@ PROJECT_ROOT = Path.cwd()
 
 
 def main():
+    """Calculate the performance of the classifier in each iteration of the bootstrap method."""
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
-    experiment_name = 'biobank_scanner1'
     dataset_name = 'ADNI'
 
-    participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
-    freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
+    participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    disease_label = 27
+    disease_label = 17
 
     # ----------------------------------------------------------------------------
     # Set random seed
@@ -32,17 +31,18 @@ def main():
     np.random.seed(random_seed)
     rn.seed(random_seed)
 
-    classifier_dir = PROJECT_ROOT / 'outputs' / experiment_name / 'classifier_analysis'
+    classifier_dir = PROJECT_ROOT / 'outputs' / 'classifier_analysis'
     classifier_dataset_dir = classifier_dir / dataset_name
     classifier_dataset_analysis_dir = classifier_dataset_dir / '{:02d}_vs_{:02d}'.format(hc_label, disease_label)
     ids_dir = classifier_dataset_analysis_dir / 'ids'
+
     predictions_dir = classifier_dataset_analysis_dir / 'predictions'
     predictions_dir.mkdir(exist_ok=True)
+
     auc_bootstrap_train = []
     auc_bootstrap_test = []
     # ----------------------------------------------------------------------------
     for i_bootstrap in range(n_bootstrap):
-        # Salvar apenas as aucs
         ids_filename_train = 'homogeneous_bootstrap_{:03d}_train.csv'.format(i_bootstrap)
         ids_path_train = ids_dir / ids_filename_train
 
@@ -112,12 +112,12 @@ def main():
 
         print('AUC = {:.03f}'.format(auc))
 
-
         temp = dataset_df[['Image_ID']]
         temp['predictions'] = pred
 
         predictions_df = pd.concat([predictions_df, temp], axis=0)
-        predictions_df.to_csv(predictions_dir / 'homogeneous_bootstrap_{:03d}_prediction.csv'.format(i_bootstrap), index=False)
+        predictions_df.to_csv(predictions_dir / 'homogeneous_bootstrap_{:03d}_prediction.csv'.format(i_bootstrap),
+                              index=False)
 
     np.save(classifier_dataset_analysis_dir / 'aucs_train.npy', np.array(auc_bootstrap_train))
     np.save(classifier_dataset_analysis_dir / 'aucs_test.npy', np.array(auc_bootstrap_test))

@@ -1,31 +1,32 @@
-"""Deterministic supervised adversarial autoencoder."""
+"""Script to train the deterministic supervised adversarial autoencoder."""
 from pathlib import Path
 import random as rn
 import time
 
 import joblib
-from sklearn.preprocessing import RobustScaler
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import RobustScaler, OneHotEncoder
 import numpy as np
+import tensorflow as tf
 
 from utils import COLUMNS_NAME, load_dataset
-from models import *
+from models import make_encoder_model_v1, make_decoder_model_v1, make_discriminator_model_v1
 
 PROJECT_ROOT = Path.cwd()
 
 
 def main():
-    """"""
+    """Train the normative method on the bootstrapped samples.
+
+    The script also the scaler and the demographic data encoder.
+    """
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
-    experiment_name = 'biobank_scanner1'
     model_name = 'supervised_aae'
 
-    participants_path = PROJECT_ROOT / 'data' / 'datasets' / 'BIOBANK' / 'participants.tsv'
-    freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / 'BIOBANK' / 'freesurferData.csv'
+    participants_path = PROJECT_ROOT / 'data' / 'BIOBANK' / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / 'BIOBANK' / 'freesurferData.csv'
     # ----------------------------------------------------------------------------
-    experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
-    bootstrap_dir = experiment_dir / 'bootstrap_analysis'
+    bootstrap_dir = PROJECT_ROOT / 'outputs' / 'bootstrap_analysis'
     ids_dir = bootstrap_dir / 'ids'
 
     model_dir = bootstrap_dir / model_name
@@ -167,12 +168,10 @@ def main():
 
         # -------------------------------------------------------------------------------------------------------------
         # Training loop
-
         global_step = 0
         n_epochs = 200
         gamma = 0.98
         scale_fn = lambda x: gamma ** x
-        training_start = time.time()
         for epoch in range(n_epochs):
             start = time.time()
 
@@ -181,7 +180,7 @@ def main():
             epoch_dc_acc_avg = tf.metrics.Mean()
             epoch_gen_loss_avg = tf.metrics.Mean()
 
-            for batch, (batch_x, batch_y) in enumerate(train_dataset):
+            for _, (batch_x, batch_y) in enumerate(train_dataset):
                 global_step = global_step + 1
                 cycle = np.floor(1 + global_step / (2 * step_size))
                 x_lr = np.abs(global_step / step_size - 2 * cycle + 1)
@@ -197,8 +196,6 @@ def main():
                 epoch_dc_acc_avg(dc_acc)
                 epoch_gen_loss_avg(gen_loss)
 
-
-
             epoch_time = time.time() - start
 
             print('{:4d}: TIME: {:.2f} ETA: {:.2f} AE_LOSS: {:.4f} DC_LOSS: {:.4f} DC_ACC: {:.4f} GEN_LOSS: {:.4f}' \
@@ -208,8 +205,6 @@ def main():
                           epoch_dc_loss_avg.result(),
                           epoch_dc_acc_avg.result(),
                           epoch_gen_loss_avg.result()))
-
-        training_time = time.time() - training_start
 
         # Save models
         encoder.save(bootstrap_model_dir / 'encoder.h5')

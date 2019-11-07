@@ -1,6 +1,5 @@
-"""
-Script to create gender-homogeneous bootstrap datasets to feed into create_h5_bootstrap script;
-Creates 50 bootstrap samples with increasing size
+"""Script to create the files with the ids of the subjects from UK BIOBANK included in each bootstrap iteration.
+These ids are used to train the normative approach.
 """
 from pathlib import Path
 
@@ -11,16 +10,14 @@ PROJECT_ROOT = Path.cwd()
 
 
 def main():
-    """"""
+    """Creates the csv files with the ids of the subjects used to train the normative model."""
     # ----------------------------------------------------------------------------------------
     n_bootstrap = 1000
-    experiment_name = 'biobank_scanner1'
-
-    ids_path = PROJECT_ROOT / 'outputs' / experiment_name / 'cleaned_ids.csv'
+    ids_path = PROJECT_ROOT / 'outputs' / 'cleaned_ids.csv'
     # ----------------------------------------------------------------------------------------
     # Create experiment's output directory
-    experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
-    bootstrap_dir = experiment_dir / 'bootstrap_analysis'
+    outputs_dir = PROJECT_ROOT / 'outputs'
+    bootstrap_dir = outputs_dir / 'bootstrap_analysis'
     bootstrap_dir.mkdir(exist_ok=True)
 
     # Set random seed for random sampling of subjects

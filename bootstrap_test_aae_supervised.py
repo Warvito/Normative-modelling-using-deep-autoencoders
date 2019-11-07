@@ -1,4 +1,4 @@
-"""Test supervised models on clinical data."""
+"""Inference the predictions of the clinical datasets using the supervised model."""
 from pathlib import Path
 
 import joblib
@@ -13,22 +13,21 @@ PROJECT_ROOT = Path.cwd()
 
 
 def main():
-    """"""
+    """Make predictions using trained normative models."""
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
-    experiment_name = 'biobank_scanner1'
     model_name = 'supervised_aae'
-    dataset_name = 'FBF_Brescia'
+    dataset_name = 'ADNI'
 
-    participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
-    freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
+    participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
     # ----------------------------------------------------------------------------
     # Create directories structure
-    experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
-    bootstrap_dir = experiment_dir / 'bootstrap_analysis'
+    outputs_dir = PROJECT_ROOT / 'outputs'
+    bootstrap_dir = outputs_dir / 'bootstrap_analysis'
     model_dir = bootstrap_dir / model_name
-    ids_path = experiment_dir / (dataset_name + '_homogeneous_ids.csv')
+    ids_path = outputs_dir / (dataset_name + '_homogeneous_ids.csv')
 
     # ----------------------------------------------------------------------------
     # Set random seed
