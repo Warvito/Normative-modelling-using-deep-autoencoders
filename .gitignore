@@ -1,7 +1,12 @@
 # Environments
 venv/
 
+# IDE
 .idea/
-data/
 
+# Project folders
+data/
 outputs/
+
+# Jupyter Notebook
+.ipynb_checkpoints
