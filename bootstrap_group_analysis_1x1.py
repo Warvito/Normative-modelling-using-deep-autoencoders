@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Script to perform the group analysis.
 
 Creates the figures 3 and 4 from the paper
@@ -7,6 +8,7 @@ References:
     https://machinelearningmastery.com/calculate-bootstrap-confidence-intervals-machine-learning-results-python/
     https://stats.stackexchange.com/questions/186337/average-roc-for-repeated-10-fold-cross-validation-with-probability-estimates
 """
+import argparse
 from pathlib import Path
 
 import pandas as pd
@@ -15,6 +17,7 @@ import numpy as np
 from scipy.stats import norm
 from scipy import stats
 from sklearn.metrics import roc_curve, auc
+from tqdm import tqdm
 
 from utils import COLUMNS_NAME, load_dataset, cliff_delta
 
@@ -26,19 +29,17 @@ def gaussian_likelihood(x):
     return np.exp(norm.logpdf(x, loc=0, scale=1))
 
 
-def main():
+def main(dataset_name, disease_label):
     """Perform the group analysis."""
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
 
     model_name = 'supervised_aae'
-    dataset_name = 'ADNI'
 
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    disease_label = 17
 
     # ----------------------------------------------------------------------------
     bootstrap_dir = PROJECT_ROOT / 'outputs' / 'bootstrap_analysis'
@@ -51,7 +52,7 @@ def main():
     auc_roc_list = []
     effect_size_list = []
 
-    for i_bootstrap in range(n_bootstrap):
+    for i_bootstrap in tqdm(range(n_bootstrap)):
         bootstrap_model_dir = model_dir / '{:03d}'.format(i_bootstrap)
 
         output_dataset_dir = bootstrap_model_dir / dataset_name
@@ -88,7 +89,7 @@ def main():
             _, pvalue = stats.mannwhitneyu(diff_hc, diff_patient)
             effect_size = cliff_delta(diff_hc, diff_patient)
 
-            print('{:}:{:6.4f}'.format(region, pvalue))
+            # print('{:}:{:6.4f}'.format(region, pvalue))
 
             region_df = region_df.append({'regions': region, 'pvalue': pvalue, 'effect_size': effect_size},
                                          ignore_index=True)
@@ -168,4 +169,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-D', '--dataset_name',
+                        dest='dataset_name',
+                        help='Dataset name to perform group analsysis.')
+    parser.add_argument('-L', '--disease_label',
+                        dest='disease_label',
+                        help='Disease label to perform group analsysis.',
+                        type=int)
+    args = parser.parse_args()
+
+    main(args.dataset_name, args.disease_label)

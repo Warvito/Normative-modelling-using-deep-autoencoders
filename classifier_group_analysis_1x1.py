@@ -1,15 +1,18 @@
+#!/usr/bin/env python3
 """Script to get the classification performance.
 
 References:
     https://stats.stackexchange.com/questions/96739/what-is-the-632-rule-in-bootstrapping
     https://github.com/rasbt/mlxtend/blob/9c044a920c31054fa106fb028e9115a3bd852cf8/mlxtend/evaluate/bootstrap_point632.py
 """
+import argparse
 from pathlib import Path
 import random as rn
 
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
+from tqdm import tqdm
 
 from utils import load_dataset
 
@@ -22,18 +25,15 @@ def no_information_rate(targets, predictions, loss_fn):
     return loss_fn(combinations[:, 0], combinations[:, 1])
 
 
-def main():
+def main(dataset_name, disease_label):
     """Calculate the performance of the AUC-ROC for the classifier."""
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
-
-    dataset_name = 'ADNI'
 
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    disease_label = 17
 
     # ----------------------------------------------------------------------------
     # Set random seed
@@ -52,9 +52,7 @@ def main():
 
     # ----------------------------------------------------------------------------
     bootstrap = []
-    for i_bootstrap in range(n_bootstrap):
-        print(i_bootstrap)
-
+    for i_bootstrap in tqdm(range(n_bootstrap)):
         predictions = pd.read_csv(
             classifier_dataset_analysis_dir / 'predictions' / 'homogeneous_bootstrap_{:03d}_prediction.csv'.format(
                 i_bootstrap))
@@ -75,10 +73,20 @@ def main():
         bootstrap.append((w * auc_out_of_bag + (1 - w) * auc_resubstitution))
 
     final_value = np.mean(bootstrap)
-    print(final_value)
-    print(np.percentile(bootstrap, 97.5))
-    print(np.percentile(bootstrap, 2.5))
+    # print(final_value)
+    # print(np.percentile(bootstrap, 97.5))
+    # print(np.percentile(bootstrap, 2.5))
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-D', '--dataset_name',
+                        dest='dataset_name',
+                        help='Dataset name to perform the group analysis.')
+    parser.add_argument('-L', '--disease_label',
+                        dest='disease_label',
+                        help='Disease label to perform the group analysis.',
+                        type=int)
+    args = parser.parse_args()
+
+    main(args.dataset_name, args.disease_label)

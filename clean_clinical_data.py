@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 """Script to clean clinical datasets."""
+import argparse
 from pathlib import Path
 
 import pandas as pd
@@ -8,14 +10,12 @@ from utils import load_demographic_data
 PROJECT_ROOT = Path.cwd()
 
 
-def main():
+def main(dataset_name):
     """Clean the data from the clinical datasets.
 
     We removed excluded subjects outside the age range [47,73] based on the UK Biobank data.
     """
     # ----------------------------------------------------------------------------------------
-    dataset_name = 'ADNI'
-
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
     ids_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
@@ -32,4 +32,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-D', '--dataset_name',
+                        dest='dataset_name',
+                        help='Dataset name to clean the data.')
+    args = parser.parse_args()
+
+    main(args.dataset_name)

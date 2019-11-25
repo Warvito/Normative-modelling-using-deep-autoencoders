@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Clean UK Biobank scanner 1 (Cheadle) data.
 
 Subjects from the Assessment Centre from Cheadle (code 11025) are majority white.

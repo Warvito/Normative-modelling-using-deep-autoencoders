@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Script to train the deterministic supervised adversarial autoencoder."""
 from pathlib import Path
 import random as rn

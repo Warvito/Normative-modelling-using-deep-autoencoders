@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 """Inference the predictions of the clinical datasets using the supervised model."""
+import argparse
 from pathlib import Path
 
 import joblib
@@ -6,18 +8,18 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
+from tqdm import tqdm
 
 from utils import COLUMNS_NAME, load_dataset
 
 PROJECT_ROOT = Path.cwd()
 
 
-def main():
+def main(dataset_name):
     """Make predictions using trained normative models."""
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
     model_name = 'supervised_aae'
-    dataset_name = 'ADNI'
 
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
@@ -36,7 +38,7 @@ def main():
     np.random.seed(random_seed)
 
     # ----------------------------------------------------------------------------
-    for i_bootstrap in range(n_bootstrap):
+    for i_bootstrap in tqdm(range(n_bootstrap)):
         bootstrap_model_dir = model_dir / '{:03d}'.format(i_bootstrap)
 
         output_dataset_dir = bootstrap_model_dir / dataset_name
@@ -53,8 +55,8 @@ def main():
 
         x_dataset = (np.true_divide(x_dataset, tiv)).astype('float32')
         # ----------------------------------------------------------------------------
-        encoder = keras.models.load_model(bootstrap_model_dir / 'encoder.h5')
-        decoder = keras.models.load_model(bootstrap_model_dir / 'decoder.h5')
+        encoder = keras.models.load_model(bootstrap_model_dir / 'encoder.h5', compile=False)
+        decoder = keras.models.load_model(bootstrap_model_dir / 'decoder.h5', compile=False)
 
         scaler = joblib.load(bootstrap_model_dir / 'scaler.joblib')
 
@@ -102,4 +104,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-D', '--dataset_name',
+                        dest='dataset_name',
+                        help='Dataset name to calculate deviations.')
+    args = parser.parse_args()
+
+    main(args.dataset_name)

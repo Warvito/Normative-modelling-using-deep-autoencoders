@@ -1,23 +1,24 @@
+#!/usr/bin/env python3
 """Script to create the ids of the used to train and to evaluate the classifiers across the bootstrap method."""
+import argparse
 from pathlib import Path
 
 import numpy as np
+from tqdm import tqdm
 
 from utils import load_demographic_data
 
 PROJECT_ROOT = Path.cwd()
 
 
-def main():
+def main(dataset_name, disease_label):
     """Create the ids for the classifier analysis"""
     # ----------------------------------------------------------------------------------------
     n_bootstrap = 1000
-    dataset_name = 'ADNI'
 
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
 
     hc_label = 1
-    disease_label = 17
 
     # ----------------------------------------------------------------------------
     # Create experiment's output directory
@@ -47,7 +48,7 @@ def main():
 
     n_sub = len(dataset_df)
 
-    for i_bootstrap in range(n_bootstrap):
+    for i_bootstrap in tqdm(range(n_bootstrap)):
         bootstrap_ids = dataset_df.sample(n=n_sub, replace=True, random_state=i_bootstrap)
 
         ids_filename = 'homogeneous_bootstrap_{:03d}_train.csv'.format(i_bootstrap)
@@ -60,4 +61,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-D', '--dataset_name',
+                        dest='dataset_name',
+                        help='Dataset name to create the ids for bootstrap method.')
+    parser.add_argument('-L', '--disease_label',
+                        dest='disease_label',
+                        help='Disease label to create the ids for bootstrap method.',
+                        type=int)
+    args = parser.parse_args()
+
+    main(args.dataset_name, args.disease_label)

@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 """Script to get the classification performance."""
+import argparse
 from pathlib import Path
 import random as rn
 
@@ -7,23 +9,22 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import RobustScaler
 from skrvm import RVC
+from tqdm import tqdm
 
 from utils import COLUMNS_NAME, load_dataset
 
 PROJECT_ROOT = Path.cwd()
 
 
-def main():
+def main(dataset_name, disease_label):
     """Calculate the performance of the classifier in each iteration of the bootstrap method."""
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
-    dataset_name = 'ADNI'
 
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    disease_label = 17
 
     # ----------------------------------------------------------------------------
     # Set random seed
@@ -42,7 +43,7 @@ def main():
     auc_bootstrap_train = []
     auc_bootstrap_test = []
     # ----------------------------------------------------------------------------
-    for i_bootstrap in range(n_bootstrap):
+    for i_bootstrap in tqdm(range(n_bootstrap)):
         ids_filename_train = 'homogeneous_bootstrap_{:03d}_train.csv'.format(i_bootstrap)
         ids_path_train = ids_dir / ids_filename_train
 
@@ -61,8 +62,6 @@ def main():
         y_data = np.concatenate((np.zeros(sum(dataset_df['Diagn'] == hc_label)),
                                  np.ones(sum(dataset_df['Diagn'] == disease_label))))
 
-        print('Running bootstrap {:02d}'.format(i_bootstrap))
-
         # Scaling using inter-quartile
         scaler = RobustScaler()
         x_data = scaler.fit_transform(x_data)
@@ -76,8 +75,6 @@ def main():
         auc = roc_auc_score(y_data, predictions_proba[:, 1])
 
         auc_bootstrap_train.append(auc)
-
-        print('AUC = {:.03f}'.format(auc))
 
         predictions_df = dataset_df[['Image_ID']]
         predictions_df['predictions'] = pred
@@ -110,8 +107,6 @@ def main():
 
         auc_bootstrap_test.append(auc)
 
-        print('AUC = {:.03f}'.format(auc))
-
         temp = dataset_df[['Image_ID']]
         temp['predictions'] = pred
 
@@ -124,4 +119,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-D', '--dataset_name',
+                        dest='dataset_name',
+                        help='Dataset name to train the classifiers.')
+    parser.add_argument('-L', '--disease_label',
+                        dest='disease_label',
+                        help='Disease label to train the classifiers.',
+                        type=int)
+    args = parser.parse_args()
+
+    main(args.dataset_name, args.disease_label)

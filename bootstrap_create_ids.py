@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Script to create the files with the ids of the subjects from UK BIOBANK included in each bootstrap iteration.
 These ids are used to train the normative approach.
 """
@@ -5,6 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 
 PROJECT_ROOT = Path.cwd()
 
@@ -29,7 +31,7 @@ def main():
     ids_dir = bootstrap_dir / 'ids'
     ids_dir.mkdir(exist_ok=True)
 
-    for i_bootstrap in range(n_bootstrap):
+    for i_bootstrap in tqdm(range(n_bootstrap)):
         bootstrap_ids = ids_df.sample(n=n_sub, replace=True)
         ids_filename = 'cleaned_bootstrap_{:03d}.csv'.format(i_bootstrap)
         bootstrap_ids.to_csv(ids_dir / ids_filename, index=False)

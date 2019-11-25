@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 """Script to combine the data from different sites from the same dataset."""
+import argparse
 from pathlib import Path
 
 import pandas as pd
@@ -15,7 +17,7 @@ def merge_sites_data(paths, sep=','):
     return dataframe
 
 
-def main():
+def main(dataset_name):
     """Combine the neuroimaging data and demographic data from different sites.
 
     Script will search for all neuroimaging files (i.e. freesurferData.csv) and demographic
@@ -23,7 +25,7 @@ def main():
     'ADNI')
     """
     # ----------------------------------------------------------------------------------------
-    data_dir = PROJECT_ROOT / 'data' / 'ADNI'
+    data_dir = PROJECT_ROOT / 'data' / dataset_name
     output_dir = data_dir
 
     # ----------------------------------------------------------------------------------------
@@ -38,4 +40,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-D', '--dataset_name',
+                        dest='dataset_name',
+                        help='Dataset name to combine sites.')
+    args = parser.parse_args()
+
+    main(args.dataset_name)

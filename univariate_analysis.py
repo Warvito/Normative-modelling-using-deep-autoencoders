@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 """Script to perform the mass-univariate analysis"""
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -10,16 +12,14 @@ from utils import COLUMNS_NAME, load_dataset, cliff_delta
 PROJECT_ROOT = Path.cwd()
 
 
-def main():
+def main(dataset_name, disease_label):
     # ----------------------------------------------------------------------------
     experiment_name = 'biobank_scanner1'
-    dataset_name = 'FBF_Brescia'
 
-    participants_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'participants.tsv'
-    freesurfer_path = PROJECT_ROOT / 'data' / 'datasets' / dataset_name / 'freesurferData.csv'
+    participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
-    disease_label = 18
     # ----------------------------------------------------------------------------
     # Create directories structure
     experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
@@ -56,4 +56,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-D', '--dataset_name',
+                        dest='dataset_name',
+                        help='Dataset name to perform univarate analysis.')
+    parser.add_argument('-L', '--disease_label',
+                        dest='disease_label',
+                        help='Disease label to perform univarate analysis.',
+                        type=int)
+    args = parser.parse_args()
+
+    main(args.dataset_name, args.disease_label)
