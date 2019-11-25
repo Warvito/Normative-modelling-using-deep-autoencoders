@@ -55,7 +55,7 @@ def main():
     dataset_corrected_df = dataset_df.drop(dataset_df[dataset_df['Diagn'] == 1].iloc[hc_age.argmin()].name, axis=0)
     hc_age = np.delete(hc_age, hc_age.argmin(), 0)
 
-    for _ in range(47):
+    for _ in range(48):
         print(hc_age.argmin())
         print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].Age)
         print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].name)

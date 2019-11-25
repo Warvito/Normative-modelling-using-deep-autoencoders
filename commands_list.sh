@@ -18,6 +18,11 @@ chmod -R +x ./
 ./clean_clinical_data.py -D "FBF_Brescia"
 ./clean_clinical_data.py -D "OASIS1"
 
+# Make clinical datasets homogeneous accross age and gender
+./demographic_balancing_adni_data.py
+./demographic_balancing_tomc_data.py
+./demographic_balancing_oasis1_data.py
+
 # ------------------------Bootstrap Analysis -------------------------------------
 # Create list of ids for bootstrap analysis
 ./bootstrap_create_ids.py
