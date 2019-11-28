@@ -24,11 +24,6 @@ from utils import COLUMNS_NAME, load_dataset, cliff_delta
 PROJECT_ROOT = Path.cwd()
 
 
-def gaussian_likelihood(x):
-    """Calculate the likelihood a using the Gaussian distribution."""
-    return np.exp(norm.logpdf(x, loc=0, scale=1))
-
-
 def main(dataset_name, disease_label):
     """Perform the group analysis."""
     # ----------------------------------------------------------------------------
@@ -72,6 +67,12 @@ def main(dataset_name, disease_label):
         # ----------------------------------------------------------------------------
         error_hc = reconstruction_error_df.loc[clinical_df['Diagn'] == hc_label]['Reconstruction error']
         error_patient = reconstruction_error_df.loc[clinical_df['Diagn'] == disease_label]['Reconstruction error']
+
+        statistic, pvalue = stats.mannwhitneyu(error_hc.values, error_patient.values)
+        effect_size = cliff_delta(error_hc.values, error_patient.values)
+
+        error_df = pd.DataFrame({'pvalue': [pvalue], 'statistic': [statistic], 'effect_size': [effect_size]})
+        error_df.to_csv(analysis_dir / 'error_analysis.csv', index=False)
 
         # ----------------------------------------------------------------------------
         # Compute effect size of the brain regions for the bootstrap iteration
