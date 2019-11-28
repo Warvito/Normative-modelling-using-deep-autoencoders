@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import RobustScaler
-from skrvm import RVC
+from sklearn_rvm.rvc_em import RVC2
 from tqdm import tqdm
 
 from utils import COLUMNS_NAME, load_dataset
@@ -66,7 +66,7 @@ def main(dataset_name, disease_label):
         scaler = RobustScaler()
         x_data = scaler.fit_transform(x_data)
 
-        rvm = RVC(kernel='linear')
+        rvm = RVC2(kernel='linear')
         rvm.fit(x_data, y_data)
 
         pred = rvm.predict(x_data)

@@ -10,3 +10,4 @@ joblib
 nibabel
 matplotlib-label-lines
 tqdm
+sklearn-rvm
