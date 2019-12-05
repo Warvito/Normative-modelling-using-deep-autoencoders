@@ -14,20 +14,16 @@ PROJECT_ROOT = Path.cwd()
 
 def main(dataset_name, disease_label):
     # ----------------------------------------------------------------------------
-    experiment_name = 'biobank_scanner1'
-
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
     hc_label = 1
     # ----------------------------------------------------------------------------
     # Create directories structure
-    experiment_dir = PROJECT_ROOT / 'outputs' / experiment_name
-    ids_path = experiment_dir / (dataset_name + '_homogeneous_ids.csv')
-
-    univariate_dir = experiment_dir / 'univariate_analysis'
+    # ----------------------------------------------------------------------------
+    ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
+    univariate_dir = PROJECT_ROOT / 'outputs' / 'univariate_analysis'
     univariate_dir.mkdir(exist_ok=True)
-
 
     # ----------------------------------------------------------------------------
     # Loading data
