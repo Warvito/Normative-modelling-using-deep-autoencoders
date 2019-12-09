@@ -6,7 +6,6 @@ from itertools import combinations
 
 import pandas as pd
 import numpy as np
-from scipy import stats
 from tqdm import tqdm
 
 from utils import load_dataset
@@ -54,13 +53,15 @@ def main(dataset_name, label_list):
         print(np.percentile(mean_group1 - mean_group2, 2.5))
         print(np.percentile(mean_group1 - mean_group2, 97.5))
 
-        hypothesis_df = hypothesis_df.append({'comparison':'{}_vs_{}'.format(group_labels[0], group_labels[1]),
-                'measure': 'Lower',
-                'value': np.percentile(mean_group1 - mean_group2, 2.5)}, ignore_index=True)
+        hypothesis_df = hypothesis_df.append({'comparison': '{}_vs_{}'.format(group_labels[0], group_labels[1]),
+                                              'measure': 'Lower',
+                                              'value': np.percentile(mean_group1 - mean_group2, 2.5)},
+                                             ignore_index=True)
 
-        hypothesis_df = hypothesis_df.append({'comparison':'{}_vs_{}'.format(group_labels[0], group_labels[1]),
-                'measure': 'Upper',
-                'value': np.percentile(mean_group1 - mean_group2, 97.5)}, ignore_index=True)
+        hypothesis_df = hypothesis_df.append({'comparison': '{}_vs_{}'.format(group_labels[0], group_labels[1]),
+                                              'measure': 'Upper',
+                                              'value': np.percentile(mean_group1 - mean_group2, 97.5)},
+                                             ignore_index=True)
 
     hypothesis_df.to_csv(bootstrap_dir / dataset_name / 'hypothesis_test.csv')
 
