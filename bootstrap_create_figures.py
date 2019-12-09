@@ -57,6 +57,24 @@ def main():
     plt.close()
     plt.clf()
 
+    results = pd.DataFrame(columns={'Measure', 'HC', 'EMCI', 'LMCI', 'AD'})
+    results = results.append({'Measure': 'Mean',
+                              'HC': np.mean(mean_adni_list, axis=0)[0],
+                              'EMCI': np.mean(mean_adni_list, axis=0)[1],
+                              'LMCI': np.mean(mean_adni_list, axis=0)[2],
+                              'AD': np.mean(mean_adni_list, axis=0)[3], }, ignore_index=True)
+    results = results.append({'Measure': 'Lower',
+                              'HC': np.percentile(mean_adni_list, 2.5, axis=0)[0],
+                              'EMCI': np.percentile(mean_adni_list, 2.5, axis=0)[1],
+                              'LMCI': np.percentile(mean_adni_list, 2.5, axis=0)[2],
+                              'AD': np.percentile(mean_adni_list, 2.5, axis=0)[3], }, ignore_index=True)
+    results = results.append({'Measure': 'Upper',
+                              'HC': np.percentile(mean_adni_list, 97.5, axis=0)[0],
+                              'EMCI': np.percentile(mean_adni_list, 97.5, axis=0)[1],
+                              'LMCI': np.percentile(mean_adni_list, 97.5, axis=0)[2],
+                              'AD': np.percentile(mean_adni_list, 97.5, axis=0)[3], }, ignore_index=True)
+    results.to_csv(bootstrap_dir / dataset_name / 'deviations.csv', index=False)
+
     # ----------------------------------------------------------------------------
     dataset_name = 'FBF_Brescia'
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
@@ -89,6 +107,22 @@ def main():
     plt.close()
     plt.clf()
 
+    results = pd.DataFrame(columns={'Measure', 'HC', 'MCI', 'AD'})
+    results = results.append({'Measure': 'Mean',
+                              'HC': np.mean(mean_brescia_list, axis=0)[0],
+                              'MCI': np.mean(mean_brescia_list, axis=0)[1],
+                              'AD': np.mean(mean_brescia_list, axis=0)[2], }, ignore_index=True)
+    results = results.append({'Measure': 'Lower',
+                              'HC': np.percentile(mean_brescia_list, 2.5, axis=0)[0],
+                              'MCI': np.percentile(mean_brescia_list, 2.5, axis=0)[1],
+                              'AD': np.percentile(mean_brescia_list, 2.5, axis=0)[2], }, ignore_index=True)
+    results = results.append({'Measure': 'Upper',
+                              'HC': np.percentile(mean_brescia_list, 97.5, axis=0)[0],
+                              'MCI': np.percentile(mean_brescia_list, 97.5, axis=0)[1],
+                              'AD': np.percentile(mean_brescia_list, 97.5, axis=0)[2], }, ignore_index=True)
+    results.to_csv(bootstrap_dir / dataset_name / 'deviations.csv', index=False)
+
+
     # ----------------------------------------------------------------------------
     dataset_name = 'OASIS1'
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
@@ -119,6 +153,18 @@ def main():
     plt.savefig(bootstrap_dir / 'OASIS1.eps', format='eps')
     plt.close()
     plt.clf()
+
+    results = pd.DataFrame(columns={'Measure', 'HC', 'AD'})
+    results = results.append({'Measure': 'Mean',
+                              'HC': np.mean(mean_oasis1_list, axis=0)[0],
+                              'AD': np.mean(mean_oasis1_list, axis=0)[1], }, ignore_index=True)
+    results = results.append({'Measure': 'Lower',
+                              'HC': np.percentile(mean_oasis1_list, 2.5, axis=0)[0],
+                              'AD': np.percentile(mean_oasis1_list, 2.5, axis=0)[1], }, ignore_index=True)
+    results = results.append({'Measure': 'Upper',
+                              'HC': np.percentile(mean_oasis1_list, 97.5, axis=0)[0],
+                              'AD': np.percentile(mean_oasis1_list, 97.5, axis=0)[1], }, ignore_index=True)
+    results.to_csv(bootstrap_dir / dataset_name / 'deviations.csv', index=False)
 
 
 if __name__ == "__main__":
