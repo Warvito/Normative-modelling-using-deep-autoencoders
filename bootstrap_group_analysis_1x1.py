@@ -14,7 +14,6 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import norm
 from scipy import stats
 from sklearn.metrics import roc_curve, auc
 from tqdm import tqdm
@@ -46,6 +45,8 @@ def main(dataset_name, disease_label):
 
     auc_roc_list = []
     effect_size_list = []
+    mean_hc_error = []
+    mean_patient_error = []
 
     for i_bootstrap in tqdm(range(n_bootstrap)):
         bootstrap_model_dir = model_dir / '{:03d}'.format(i_bootstrap)
@@ -68,11 +69,8 @@ def main(dataset_name, disease_label):
         error_hc = reconstruction_error_df.loc[clinical_df['Diagn'] == hc_label]['Reconstruction error']
         error_patient = reconstruction_error_df.loc[clinical_df['Diagn'] == disease_label]['Reconstruction error']
 
-        statistic, pvalue = stats.mannwhitneyu(error_hc.values, error_patient.values)
-        effect_size = cliff_delta(error_hc.values, error_patient.values)
-
-        error_df = pd.DataFrame({'pvalue': [pvalue], 'statistic': [statistic], 'effect_size': [effect_size]})
-        error_df.to_csv(analysis_dir / 'error_analysis.csv', index=False)
+        mean_hc_error.append(np.mean(error_hc))
+        mean_patient_error.append(np.mean(error_patient))
 
         # ----------------------------------------------------------------------------
         # Compute effect size of the brain regions for the bootstrap iteration
@@ -115,6 +113,14 @@ def main(dataset_name, disease_label):
     comparison_dir = bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label))
     comparison_dir.mkdir(exist_ok=True)
 
+    # ----------------------------------------------------------------------------
+    # Hypothesis test of the observed deviation
+    t_stats, p_value = stats.ttest_ind(mean_hc_error,mean_patient_error)
+
+    hypothesis_df = pd.DataFrame(data={'p-value': [p_value], 't_stats': [t_stats]})
+    hypothesis_df.to_csv(comparison_dir / 'hypothesis_test.csv')
+
+    # ----------------------------------------------------------------------------
     # Save regions effect sizes
     effect_size_df = pd.DataFrame(columns=COLUMNS_NAME, data=np.array(effect_size_list))
     effect_size_df.to_csv(comparison_dir / 'effect_size.csv')
