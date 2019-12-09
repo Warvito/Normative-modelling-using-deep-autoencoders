@@ -72,11 +72,14 @@ def main(dataset_name, disease_label):
 
         bootstrap.append((w * auc_out_of_bag + (1 - w) * auc_resubstitution))
 
+    all_aucs = pd.DataFrame(columns=['AUCS'], data=bootstrap)
+    all_aucs.to_csv(classifier_dataset_analysis_dir / 'all_AUCs.csv', index=False)
+
     results = pd.DataFrame(columns=['Measure', 'Value'])
     results = results.append({'Measure': 'mean', 'Value': np.mean(bootstrap)}, ignore_index = True)
     results = results.append({'Measure': 'upper_limit', 'Value': np.percentile(bootstrap, 97.5)}, ignore_index = True)
     results = results.append({'Measure': 'lower_limit', 'Value': np.percentile(bootstrap, 2.5)}, ignore_index = True)
-    results.to_csv(classifier_dataset_analysis_dir / ('AUCs.csv'), index=False)
+    results.to_csv(classifier_dataset_analysis_dir / 'AUCs_summary.csv', index=False)
 
 
 if __name__ == "__main__":
