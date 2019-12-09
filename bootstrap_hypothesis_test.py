@@ -51,13 +51,16 @@ def main(dataset_name, label_list):
         mean_group1 = np.mean(reconstruction_error_list_df.loc[clinical_df['Diagn'] == group_labels[0]].values, axis=0)
         mean_group2 = np.mean(reconstruction_error_list_df.loc[clinical_df['Diagn'] == group_labels[1]].values, axis=0)
 
-        t_stats, p_value = stats.ttest_ind(mean_group1, mean_group2)
+        print(np.percentile(mean_group1 - mean_group2, 2.5))
+        print(np.percentile(mean_group1 - mean_group2, 97.5))
 
-        data = {'comparison':'{}_vs_{}'.format(group_labels[0], group_labels[1]),
-                'p-value': p_value,
-                't_stats': t_stats}
+        hypothesis_df = hypothesis_df.append({'comparison':'{}_vs_{}'.format(group_labels[0], group_labels[1]),
+                'measure': 'Lower',
+                'value': np.percentile(mean_group1 - mean_group2, 2.5)}, ignore_index=True)
 
-        hypothesis_df = hypothesis_df.append(data, ignore_index=True)
+        hypothesis_df = hypothesis_df.append({'comparison':'{}_vs_{}'.format(group_labels[0], group_labels[1]),
+                'measure': 'Upper',
+                'value': np.percentile(mean_group1 - mean_group2, 97.5)}, ignore_index=True)
 
     hypothesis_df.to_csv(bootstrap_dir / dataset_name / 'hypothesis_test.csv')
 

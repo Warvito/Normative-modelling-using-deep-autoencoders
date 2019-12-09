@@ -4,7 +4,6 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
-from scipy import stats
 import numpy as np
 
 PROJECT_ROOT = Path.cwd()
