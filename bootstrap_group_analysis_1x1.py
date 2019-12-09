@@ -23,6 +23,40 @@ from utils import COLUMNS_NAME, load_dataset, cliff_delta
 PROJECT_ROOT = Path.cwd()
 
 
+def compute_brain_regions_deviations(diff_df, clinical_df, disease_label, hc_label=1):
+    """ Calculate the Cliff's delta effect size between groups."""
+    region_df = pd.DataFrame(columns=['regions', 'pvalue', 'effect_size'])
+
+    diff_hc = diff_df.loc[clinical_df['Diagn'] == disease_label]
+    diff_patient = diff_df.loc[clinical_df['Diagn'] == hc_label]
+
+    for region in COLUMNS_NAME:
+        _, pvalue = stats.mannwhitneyu(diff_hc[region], diff_patient[region])
+        effect_size = cliff_delta(diff_hc[region], diff_patient[region])
+
+        region_df = region_df.append({'regions': region, 'pvalue': pvalue, 'effect_size': effect_size},
+                                     ignore_index=True)
+
+    return region_df
+
+
+def compute_classification_performance(reconstruction_error_df, clinical_df, disease_label, hc_label=1):
+    """ Calculate the AUCs of the normative model."""
+    error_hc = reconstruction_error_df.loc[clinical_df['Diagn'] == hc_label]['Reconstruction error']
+    error_patient = reconstruction_error_df.loc[clinical_df['Diagn'] == disease_label]['Reconstruction error']
+
+    fpr, tpr, _ = roc_curve(list(np.zeros_like(error_hc)) + list(np.ones_like(error_patient)),
+                            list(error_hc) + list(error_patient))
+
+    roc_auc = auc(fpr, tpr)
+
+    tpr = np.interp(np.linspace(0, 1, 101), fpr, tpr)
+
+    tpr[0] = 0.0
+
+    return roc_auc, tpr
+
+
 def main(dataset_name, disease_label):
     """Perform the group analysis."""
     # ----------------------------------------------------------------------------
@@ -40,13 +74,10 @@ def main(dataset_name, disease_label):
     model_dir = bootstrap_dir / model_name
     ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
 
-    tprs = []
-    base_fpr = np.linspace(0, 1, 101)
+    tpr_list = []
 
     auc_roc_list = []
     effect_size_list = []
-    mean_hc_error = []
-    mean_patient_error = []
 
     for i_bootstrap in tqdm(range(n_bootstrap)):
         bootstrap_model_dir = model_dir / '{:03d}'.format(i_bootstrap)
@@ -59,66 +90,30 @@ def main(dataset_name, disease_label):
 
         # ----------------------------------------------------------------------------
         clinical_df = load_dataset(participants_path, ids_path, freesurfer_path)
+        clinical_df = clinical_df.set_index('Participant_ID')
 
         # ----------------------------------------------------------------------------
-        normalized_df = pd.read_csv(output_dataset_dir / 'normalized.csv')
-        reconstruction_error_df = pd.read_csv(output_dataset_dir / 'reconstruction_error.csv')
-        reconstruction_df = pd.read_csv(output_dataset_dir / 'reconstruction.csv')
-
-        # ----------------------------------------------------------------------------
-        error_hc = reconstruction_error_df.loc[clinical_df['Diagn'] == hc_label]['Reconstruction error']
-        error_patient = reconstruction_error_df.loc[clinical_df['Diagn'] == disease_label]['Reconstruction error']
-
-        mean_hc_error.append(np.mean(error_hc))
-        mean_patient_error.append(np.mean(error_patient))
+        normalized_df = pd.read_csv(output_dataset_dir / 'normalized.csv', index_col='Participant_ID')
+        reconstruction_df = pd.read_csv(output_dataset_dir / 'reconstruction.csv', index_col='Participant_ID')
+        reconstruction_error_df = pd.read_csv(output_dataset_dir / 'reconstruction_error.csv',
+                                              index_col='Participant_ID')
 
         # ----------------------------------------------------------------------------
         # Compute effect size of the brain regions for the bootstrap iteration
-        region_df = pd.DataFrame(columns=['regions', 'pvalue', 'effect_size'])
-        for region in COLUMNS_NAME:
-            x_patient = normalized_df.loc[clinical_df['Diagn'] == disease_label][region]
-            x_hc = normalized_df.loc[clinical_df['Diagn'] == hc_label][region]
-
-            recon_patient = reconstruction_df.loc[clinical_df['Diagn'] == disease_label][region]
-            recon_hc = reconstruction_df.loc[clinical_df['Diagn'] == hc_label][region]
-
-            diff_hc = np.abs(x_hc.values - recon_hc.values)
-            diff_patient = np.abs(x_patient.values - recon_patient.values)
-
-            _, pvalue = stats.mannwhitneyu(diff_hc, diff_patient)
-            effect_size = cliff_delta(diff_hc, diff_patient)
-
-            # print('{:}:{:6.4f}'.format(region, pvalue))
-
-            region_df = region_df.append({'regions': region, 'pvalue': pvalue, 'effect_size': effect_size},
-                                         ignore_index=True)
-
+        diff_df = np.abs(normalized_df - reconstruction_df)
+        region_df = compute_brain_regions_deviations(diff_df, clinical_df, disease_label)
         effect_size_list.append(region_df['effect_size'].values)
-
         region_df.to_csv(analysis_dir / 'regions_analysis.csv', index=False)
 
         # ----------------------------------------------------------------------------
         # Compute AUC-ROC for the bootstrap iteration
-        fpr, tpr, _ = roc_curve(list(np.zeros_like(error_hc)) + list(np.ones_like(error_patient)),
-                                list(error_hc) + list(error_patient))
-
-        roc_auc = auc(fpr, tpr)
+        roc_auc, tpr = compute_classification_performance(reconstruction_error_df, clinical_df, disease_label)
         auc_roc_list.append(roc_auc)
-
-        tpr = np.interp(base_fpr, fpr, tpr)
-        tpr[0] = 0.0
-        tprs.append(tpr)
+        tpr_list.append(tpr)
 
     (bootstrap_dir / dataset_name).mkdir(exist_ok=True)
     comparison_dir = bootstrap_dir / dataset_name / ('{:02d}_vs_{:02d}'.format(hc_label, disease_label))
     comparison_dir.mkdir(exist_ok=True)
-
-    # ----------------------------------------------------------------------------
-    # Hypothesis test of the observed deviation
-    t_stats, p_value = stats.ttest_ind(mean_hc_error,mean_patient_error)
-
-    hypothesis_df = pd.DataFrame(data={'p-value': [p_value], 't_stats': [t_stats]})
-    hypothesis_df.to_csv(comparison_dir / 'hypothesis_test.csv')
 
     # ----------------------------------------------------------------------------
     # Save regions effect sizes
@@ -130,20 +125,23 @@ def main(dataset_name, disease_label):
     auc_roc_df = pd.DataFrame(columns=['AUC-ROC'], data=auc_roc_list)
     auc_roc_df.to_csv(comparison_dir / 'auc_rocs.csv', index=False)
 
-    tprs = np.array(tprs)
-
     # ----------------------------------------------------------------------------
     # Create Figure 3 of the paper
-    mean_tprs = tprs.mean(axis=0)
-    tprs_upper = np.percentile(tprs, 97.5, axis=0)
-    tprs_lower = np.percentile(tprs, 2.5, axis=0)
+    tpr_list = np.array(tpr_list)
+    mean_tprs = tpr_list.mean(axis=0)
+    tprs_upper = np.percentile(tpr_list, 97.5, axis=0)
+    tprs_lower = np.percentile(tpr_list, 2.5, axis=0)
 
-    plt.plot(base_fpr, mean_tprs, 'b', lw=2,
+    plt.plot(np.linspace(0, 1, 101),
+             mean_tprs,
+             'b', lw=2,
              label='ROC curve (AUC = {:0.3f} ; 95% CI [{:0.3f}, {:0.3f}])'.format(np.mean(auc_roc_list),
                                                                                   np.percentile(auc_roc_list, 2.5),
                                                                                   np.percentile(auc_roc_list, 97.5)))
 
-    plt.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.2)
+    plt.fill_between(np.linspace(0, 1, 101),
+                     tprs_lower, tprs_upper,
+                     color='grey', alpha=0.2)
 
     plt.plot([0, 1], [0, 1], 'r--')
     plt.xlim([0, 1])
