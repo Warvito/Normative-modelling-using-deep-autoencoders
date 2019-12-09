@@ -48,6 +48,11 @@ chmod -R +x ./
 # Create Figure 2
 ./bootstrap_create_figures.py
 
+# Perform hypothesis test
+./bootstrap_hypothesis_test.py -D "ADNI" -L 1 17 27 28
+./bootstrap_hypothesis_test.py -D "FBF_Brescia" -L 1 17 18
+./bootstrap_hypothesis_test.py -D "OASIS1" -L 1 17
+
 # ----------------------- Classifier Analysis ------------------------------------
 # Create list of ids for classifier analysis
 ./classifier_create_ids.py -D "ADNI" -L 17
@@ -78,6 +83,16 @@ chmod -R +x ./
 ./classifier_group_analysis_1x1.py -D "FBF_Brescia" -L 18
 
 ./classifier_group_analysis_1x1.py -D "OASIS1" -L 17
+
+# comparing methods
+./bootstrap_normative_vs_classifier.py -D "ADNI" -L 17
+./bootstrap_normative_vs_classifier.py -D "ADNI" -L 27
+./bootstrap_normative_vs_classifier.py -D "ADNI" -L 28
+
+./bootstrap_normative_vs_classifier.py -D "FBF_Brescia" -L 17
+./bootstrap_normative_vs_classifier.py -D "FBF_Brescia" -L 18
+
+./bootstrap_normative_vs_classifier.py -D "OASIS1" -L 17
 
 # --------------------------- Misc -----------------------------------------------
 # Perform mass-univariate analysis

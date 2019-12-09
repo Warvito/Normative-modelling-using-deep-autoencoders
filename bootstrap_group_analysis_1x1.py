@@ -74,8 +74,11 @@ def main(dataset_name, disease_label):
     model_dir = bootstrap_dir / model_name
     ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
 
-    tpr_list = []
+    # ----------------------------------------------------------------------------
+    clinical_df = load_dataset(participants_path, ids_path, freesurfer_path)
+    clinical_df = clinical_df.set_index('Participant_ID')
 
+    tpr_list = []
     auc_roc_list = []
     effect_size_list = []
 
@@ -87,10 +90,6 @@ def main(dataset_name, disease_label):
 
         analysis_dir = output_dataset_dir / '{:02d}_vs_{:02d}'.format(hc_label, disease_label)
         analysis_dir.mkdir(exist_ok=True)
-
-        # ----------------------------------------------------------------------------
-        clinical_df = load_dataset(participants_path, ids_path, freesurfer_path)
-        clinical_df = clinical_df.set_index('Participant_ID')
 
         # ----------------------------------------------------------------------------
         normalized_df = pd.read_csv(output_dataset_dir / 'normalized.csv', index_col='Participant_ID')
