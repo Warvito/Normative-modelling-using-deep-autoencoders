@@ -43,6 +43,9 @@ def main():
     # Exclude non-white ethnicities due to small subgroups
     dataset = dataset.loc[dataset['Ethnicity'] == 'White']
 
+    # Exclude scanner02
+    dataset = dataset.loc[dataset['Dataset'] == 'BIOBANK-SCANNER01']
+
     # Exclude patients
     dataset = dataset.loc[dataset['Diagn'] == 1]
 

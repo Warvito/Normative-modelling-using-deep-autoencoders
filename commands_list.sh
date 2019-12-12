@@ -6,16 +6,20 @@ chmod -R +x ./
 
 # Run python scripts
 # ----------------------------- Preprocessing ------------------------------------
+# Download data from network-attached storage (MLMH lab use only)
+./download_datasets.py
+
 # Combining data from different scanners
 ./combine_sites_data.py -D "ADNI"
-./combine_sites_data.py -D "FBF_Brescia"
+./combine_sites_data.py -D "TOMC"
+./combine_sites_data.py -D "BIOBANK"
 
 # Clean UKBiobank data
 ./clean_biobank1_data.py
 
 # Clean clinical datasets
 ./clean_clinical_data.py -D "ADNI"
-./clean_clinical_data.py -D "FBF_Brescia"
+./clean_clinical_data.py -D "TOMC"
 ./clean_clinical_data.py -D "OASIS1"
 
 # Make clinical datasets homogeneous accross age and gender
@@ -32,7 +36,7 @@ chmod -R +x ./
 
 # Calculate deviations on clinical data
 ./bootstrap_test_aae_supervised.py -D "ADNI"
-./bootstrap_test_aae_supervised.py -D "FBF_Brescia"
+./bootstrap_test_aae_supervised.py -D "TOMC"
 ./bootstrap_test_aae_supervised.py -D "OASIS1"
 
 # Perform statistical analysis
@@ -40,8 +44,8 @@ chmod -R +x ./
 ./bootstrap_group_analysis_1x1.py -D "ADNI" -L 27
 ./bootstrap_group_analysis_1x1.py -D "ADNI" -L 28
 
-./bootstrap_group_analysis_1x1.py -D "FBF_Brescia" -L 17
-./bootstrap_group_analysis_1x1.py -D "FBF_Brescia" -L 18
+./bootstrap_group_analysis_1x1.py -D "TOMC" -L 17
+./bootstrap_group_analysis_1x1.py -D "TOMC" -L 18
 
 ./bootstrap_group_analysis_1x1.py -D "OASIS1" -L 17
 
@@ -50,7 +54,7 @@ chmod -R +x ./
 
 # Perform hypothesis test
 ./bootstrap_hypothesis_test.py -D "ADNI" -L 1 17 27 28
-./bootstrap_hypothesis_test.py -D "FBF_Brescia" -L 1 17 18
+./bootstrap_hypothesis_test.py -D "TOMC" -L 1 17 18
 ./bootstrap_hypothesis_test.py -D "OASIS1" -L 1 17
 
 # ----------------------- Classifier Analysis ------------------------------------
@@ -59,8 +63,8 @@ chmod -R +x ./
 ./classifier_create_ids.py -D "ADNI" -L 27
 ./classifier_create_ids.py -D "ADNI" -L 28
 
-./classifier_create_ids.py -D "FBF_Brescia" -L 17
-./classifier_create_ids.py -D "FBF_Brescia" -L 18
+./classifier_create_ids.py -D "TOMC" -L 17
+./classifier_create_ids.py -D "TOMC" -L 18
 
 ./classifier_create_ids.py -D "OASIS1" -L 17
 
@@ -69,8 +73,8 @@ chmod -R +x ./
 ./classifier_train.py -D "ADNI" -L 27
 ./classifier_train.py -D "ADNI" -L 28
 
-./classifier_train.py -D "FBF_Brescia" -L 17
-./classifier_train.py -D "FBF_Brescia" -L 18
+./classifier_train.py -D "TOMC" -L 17
+./classifier_train.py -D "TOMC" -L 18
 
 ./classifier_train.py -D "OASIS1" -L 17
 
@@ -79,8 +83,8 @@ chmod -R +x ./
 ./classifier_group_analysis_1x1.py -D "ADNI" -L 27
 ./classifier_group_analysis_1x1.py -D "ADNI" -L 28
 
-./classifier_group_analysis_1x1.py -D "FBF_Brescia" -L 17
-./classifier_group_analysis_1x1.py -D "FBF_Brescia" -L 18
+./classifier_group_analysis_1x1.py -D "TOMC" -L 17
+./classifier_group_analysis_1x1.py -D "TOMC" -L 18
 
 ./classifier_group_analysis_1x1.py -D "OASIS1" -L 17
 
@@ -89,8 +93,8 @@ chmod -R +x ./
 ./bootstrap_normative_vs_classifier.py -D "ADNI" -L 27
 ./bootstrap_normative_vs_classifier.py -D "ADNI" -L 28
 
-./bootstrap_normative_vs_classifier.py -D "FBF_Brescia" -L 17
-./bootstrap_normative_vs_classifier.py -D "FBF_Brescia" -L 18
+./bootstrap_normative_vs_classifier.py -D "TOMC" -L 17
+./bootstrap_normative_vs_classifier.py -D "TOMC" -L 18
 
 ./bootstrap_normative_vs_classifier.py -D "OASIS1" -L 17
 
@@ -100,7 +104,7 @@ chmod -R +x ./
 ./univariate_analysis.py -D "ADNI" -L 27
 ./univariate_analysis.py -D "ADNI" -L 28
 
-./univariate_analysis.py -D "FBF_Brescia" -L 17
-./univariate_analysis.py -D "FBF_Brescia" -L 18
+./univariate_analysis.py -D "TOMC" -L 17
+./univariate_analysis.py -D "TOMC" -L 18
 
 ./univariate_analysis.py -D "OASIS1" -L 17

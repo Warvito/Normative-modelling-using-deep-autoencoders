@@ -90,9 +90,6 @@ def load_demographic_data(demographic_path, ids_path):
     if 'Participant_ID' in ids_df.columns:
         # For create_homogeneous_data.py output
         ids_df['ID'] = ids_df['Participant_ID'].str.split('-').str[1]
-    elif 'FBF_Brescia' in str(demographic_path):
-        ids_df['ID'] = ids_df['Image_ID'].str.split('_').str[0] + '_' + ids_df['Image_ID'].str.split('_').str[1]
-        ids_df['ID'] = ids_df['ID'].str.split('-').str[1]
     else:
         # For freesurferData dataframe
         ids_df['ID'] = ids_df['Image_ID'].str.split('_').str[0]
