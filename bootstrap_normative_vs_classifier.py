@@ -41,10 +41,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-D', '--dataset_name',
                         dest='dataset_name',
-                        help='Dataset name to perform group analsysis.')
+                        help='Dataset name to perform comparison between normative and classifiers.')
     parser.add_argument('-L', '--disease_label',
                         dest='disease_label',
-                        help='Disease label to perform group analsysis.',
+                        help='Disease label to perform comparison between normative and classifiers.',
                         type=int)
     args = parser.parse_args()
 

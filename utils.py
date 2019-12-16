@@ -1,5 +1,6 @@
 """Helper functions and constants."""
 from pathlib import Path
+import warnings
 
 import pandas as pd
 import numpy as np
@@ -30,18 +31,16 @@ def load_dataset(demographic_path, ids_path, freesurfer_path):
     freesurfer = pd.read_csv(freesurfer_path)
 
     # Create a new col in FS dataset to contain Participant_ID
-    if 'FBF_Brescia' in str(demographic_path):
-        freesurfer['Participant_ID'] = freesurfer['Image_ID'].str.split('_').str[0] + '_' + \
-                                       freesurfer['Image_ID'].str.split('_').str[1]
-    else:
-        freesurfer['Participant_ID'] = freesurfer['Image_ID'].str.split('_', expand=True)[0]
+    freesurfer['participant_id'] = freesurfer['Image_ID'].str.split('_', expand=True)[0]
 
     # Merge FS dataset and demographic dataset to access age
-    dataset = pd.merge(freesurfer, dataset, on='Participant_ID')
+    dataset = pd.merge(freesurfer, dataset, on='participant_id')
 
     if 'Image_ID_y' in dataset.columns:
-        dataset['Image_ID'] = dataset['Image_ID_x']
-        dataset = dataset.drop(['Image_ID_y', 'Image_ID_x'], axis=1)
+        raise('MERGE')
+        # warnings.warn('WARNING: MERGING Image_ID_y \n')
+        # dataset['Image_ID'] = dataset['Image_ID_x']
+        # dataset = dataset.drop(['Image_ID_y', 'Image_ID_x'], axis=1)
 
     return dataset
 
@@ -49,67 +48,28 @@ def load_dataset(demographic_path, ids_path, freesurfer_path):
 def load_demographic_data(demographic_path, ids_path):
     """Load dataset using selected ids."""
 
-    if demographic_path.suffix == '.tsv':
-        demographic_df = pd.read_csv(demographic_path, sep='\t')
-    else:
-        demographic_df = pd.read_csv(demographic_path)
+    demographic_df = pd.read_csv(demographic_path, sep='\t')
 
-    # if using UK Biobank supplementary data
-    if 'eid' in demographic_df.columns:
-        demographic_df = demographic_df[['eid', '31-0.0', '21000-0.0', '21003-2.0']]
-        demographic_df.columns = ['ID', 'Gender', 'Ethnicity', 'Age']
-
-        # Labeling data
-        ethnicity_dict = {
-            1: 'White', 1001: 'White', 1002: 'White', 1003: 'White',
-            2: 'Mixed', 2001: 'Mixed', 2002: 'Mixed', 2003: 'Mixed', 2004: 'Mixed',
-            3: 'Asian', 3001: 'Asian', 3002: 'Asian', 3003: 'Asian', 3004: 'Asian',
-            4: 'Black', 4001: 'Black', 4002: 'Black', 4003: 'Black',
-            5: 'Chinese',
-            6: 'Other',
-            -1: 'Not known', -3: 'Not known'
-        }
-
-        gender_dict = {
-            0: 'Female',
-            1: 'Male'
-        }
-
-        demographic_df = demographic_df.replace({'Gender': gender_dict})
-        demographic_df = demographic_df.replace({'Ethnicity': ethnicity_dict})
-
-    # if using participants.tsv file
-    else:
-        demographic_df['ID'] = demographic_df['Participant_ID'].str.split('-').str[1]
-
-    # demographic_df['ID'] = pd.to_numeric(demographic_df['ID'])
+    demographic_df['ID'] = demographic_df['participant_id'].str.split('-').str[1]
     demographic_df = demographic_df.dropna()
 
     ids_df = pd.read_csv(ids_path)
     # Create a new 'ID' column to match supplementary demographic data
-    if 'Participant_ID' in ids_df.columns:
+    if 'participant_id' in ids_df.columns:
         # For create_homogeneous_data.py output
-        ids_df['ID'] = ids_df['Participant_ID'].str.split('-').str[1]
+        ids = ids_df['participant_id'].str.split('-').str[1]
     else:
         # For freesurferData dataframe
-        ids_df['ID'] = ids_df['Image_ID'].str.split('_').str[0]
-        ids_df['ID'] = ids_df['ID'].str.split('-').str[1]
+        ids = ids_df['Image_ID'].str.split('_').str[0]
+        ids = ids.str.split('-').str[1]
 
-    # ids_df['ID'] = pd.to_numeric(ids_df['ID'])
+    ids_df = pd.DataFrame(columns=['ID'], data=ids.values)
 
     # Merge supplementary demographic data with ids
-    demographic_df['ID'] = demographic_df['ID'].astype('int')
-    ids_df['ID'] = ids_df['ID'].astype('int')
+    demographic_df['ID'] = demographic_df['ID'].apply(str)
+    ids_df['ID'] = ids_df['ID'].apply(str)
 
     dataset = pd.merge(ids_df, demographic_df, on='ID')
-
-    if 'Participant_ID_y' in dataset.columns:
-        dataset['Participant_ID'] = dataset['Participant_ID_x']
-        dataset = dataset.drop(['Participant_ID_x', 'Participant_ID_y'], axis=1)
-
-    if 'Image_ID_y' in dataset.columns:
-        dataset['Image_ID'] = dataset['Image_ID_x']
-        dataset = dataset.drop(['Image_ID_y', 'Image_ID_x'], axis=1)
 
     return dataset
 

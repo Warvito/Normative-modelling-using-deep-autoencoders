@@ -40,7 +40,6 @@ def main(dataset_name):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-D', '--dataset_name',
                         dest='dataset_name',

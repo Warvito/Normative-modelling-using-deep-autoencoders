@@ -27,12 +27,13 @@ def main(dataset_name):
 
     dataset = dataset.loc[(dataset['Age'] >= 47) & (dataset['Age'] <= 73)]
 
-    output_ids_df = pd.DataFrame(dataset['Participant_ID'])
+    dataset = dataset.drop_duplicates(subset='participant_id')
+
+    output_ids_df = pd.DataFrame(dataset['participant_id'])
     output_ids_df.to_csv(outputs_dir / output_ids_filename, index=False)
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-D', '--dataset_name',
                         dest='dataset_name',

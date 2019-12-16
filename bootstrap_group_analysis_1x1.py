@@ -76,7 +76,7 @@ def main(dataset_name, disease_label):
 
     # ----------------------------------------------------------------------------
     clinical_df = load_dataset(participants_path, ids_path, freesurfer_path)
-    clinical_df = clinical_df.set_index('Participant_ID')
+    clinical_df = clinical_df.set_index('participant_id')
 
     tpr_list = []
     auc_roc_list = []
@@ -92,10 +92,10 @@ def main(dataset_name, disease_label):
         analysis_dir.mkdir(exist_ok=True)
 
         # ----------------------------------------------------------------------------
-        normalized_df = pd.read_csv(output_dataset_dir / 'normalized.csv', index_col='Participant_ID')
-        reconstruction_df = pd.read_csv(output_dataset_dir / 'reconstruction.csv', index_col='Participant_ID')
+        normalized_df = pd.read_csv(output_dataset_dir / 'normalized.csv', index_col='participant_id')
+        reconstruction_df = pd.read_csv(output_dataset_dir / 'reconstruction.csv', index_col='participant_id')
         reconstruction_error_df = pd.read_csv(output_dataset_dir / 'reconstruction_error.csv',
-                                              index_col='Participant_ID')
+                                              index_col='participant_id')
 
         # ----------------------------------------------------------------------------
         # Compute effect size of the brain regions for the bootstrap iteration
@@ -176,10 +176,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-D', '--dataset_name',
                         dest='dataset_name',
-                        help='Dataset name to perform group analsysis.')
+                        help='Dataset name to perform group analysis.')
     parser.add_argument('-L', '--disease_label',
                         dest='disease_label',
-                        help='Disease label to perform group analsysis.',
+                        help='Disease label to perform group analysis.',
                         type=int)
     args = parser.parse_args()
 

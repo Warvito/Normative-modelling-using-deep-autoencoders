@@ -34,9 +34,13 @@ Install dependencies
 The sequence of our codes and its arguments can be found in the commands_list.sh file. 
 The following list indicates the different phases and its scripts.
 
+#### 0. Getting data
+Script for internal use (Machine Learning in Mental Health Lab only).
+1. [download_datasets.py](download_datasets.py)
+2. [combine_sites_data.py](combine_sites_data.py)
+
 #### 1. Preprocessing
 1. [clean_biobank1_data.py](clean_biobank1_data.py)
-2. [combine_sites_data.py](combine_sites_data.py)
 3. [clean_clinical_data.py](clean_clinical_data.py)
 4. [demographic_balancing_adni_data.py](demographic_balancing_adni_data.py)
 5. [demographic_balancing_tomc_data.py](demographic_balancing_tomc_data.py)
@@ -50,6 +54,7 @@ These scripts obtain the results from sections 3.1, 3.2, 3.3 of the paper.
 3. [bootstrap_test_aae_supervised.py](bootstrap_test_aae_supervised.py)
 4. [bootstrap_group_analysis_1x1.py](bootstrap_group_analysis_1x1.py)
 5. [bootstrap_create_figures.py](bootstrap_create_figures.py)
+6. [bootstrap_hypothesis_test.py](bootstrap_hypothesis_test.py)
 
 #### 2b. Classifier analysis
 Analysis where we measure the performance of the binary classification (using RVM).
@@ -58,6 +63,7 @@ These scripts obtain the results from sections 3.4 of the paper.
 1. [classifier_create_ids.py](classifier_create_ids.py)
 2. [classifier_train.py](classifier_train.py)
 3. [classifier_group_analysis_1x1.py](classifier_group_analysis_1x1.py)
+4. [bootstrap_normative_vs_classifier.py](bootstrap_normative_vs_classifier.py)
 
 #### 2c. Miscellaneous 
 1. [univariate_analysis.py](univariate_analysis.py)

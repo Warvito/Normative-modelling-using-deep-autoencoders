@@ -42,13 +42,12 @@ def download_files(data_dir, selected_path, dataset_prefix_path):
         print('{} does not have freesurferData.csv'.format(dataset_prefix_path))
 
 
-
 def main():
     """Perform download of selected datasets from the network-attached storage."""
     data_dir = Path('data')
     data_dir.mkdir(exist_ok=True)
 
-    selected_datasets = ['BIOBANK', 'ADNI2', 'ADNI3', 'ADNIGO', 'TOMC', 'OASIS1']
+    selected_datasets = ['BIOBANK', 'ADNI2', 'ADNI3', 'ADNIGO', 'TOMC', 'OASIS1', 'AIBL']
 
     for dataset_name in selected_datasets:
         selected_path = DEEPLAB_VOLUME / 'BIDS_data' / dataset_name

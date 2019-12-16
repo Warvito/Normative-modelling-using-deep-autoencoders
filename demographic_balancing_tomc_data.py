@@ -20,7 +20,7 @@ PROJECT_ROOT = Path.cwd()
 def main():
     """Verify age and gender balance along the groups from the TOMC dataset."""
     # ----------------------------------------------------------------------------------------
-    dataset_name = 'FBF_Brescia'
+    dataset_name = 'TOMC'
 
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'

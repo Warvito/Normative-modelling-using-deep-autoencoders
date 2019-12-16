@@ -45,7 +45,6 @@ def main():
     print(hc_age.mean())
     print(ad_age.mean())
 
-
     # HC is too young, dropping some of the youngest
     print(hc_age.argmin())
     print(dataset_df[dataset_df['Diagn'] == 1].iloc[hc_age.argmin()].Age)

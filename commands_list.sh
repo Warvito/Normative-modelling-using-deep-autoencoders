@@ -5,7 +5,7 @@ source venv/bin/activate
 chmod -R +x ./
 
 # Run python scripts
-# ----------------------------- Preprocessing ------------------------------------
+# ----------------------------- Getting data -------------------------------------
 # Download data from network-attached storage (MLMH lab use only)
 ./download_datasets.py
 
@@ -14,7 +14,8 @@ chmod -R +x ./
 ./combine_sites_data.py -D "TOMC"
 ./combine_sites_data.py -D "BIOBANK"
 
-# Clean UKBiobank data
+# ----------------------------- Preprocessing ------------------------------------
+# Clean UK Biobank data
 ./clean_biobank1_data.py
 
 # Clean clinical datasets

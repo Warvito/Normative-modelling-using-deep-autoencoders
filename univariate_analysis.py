@@ -55,10 +55,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-D', '--dataset_name',
                         dest='dataset_name',
-                        help='Dataset name to perform univarate analysis.')
+                        help='Dataset name to perform univariate analysis.')
     parser.add_argument('-L', '--disease_label',
                         dest='disease_label',
-                        help='Disease label to perform univarate analysis.',
+                        help='Disease label to perform univariate analysis.',
                         type=int)
     args = parser.parse_args()
 

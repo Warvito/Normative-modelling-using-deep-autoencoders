@@ -29,8 +29,8 @@ def main(dataset_name, label_list):
     bootstrap_dir = PROJECT_ROOT / 'outputs' / 'bootstrap_analysis'
     model_dir = bootstrap_dir / model_name
 
-    reconstruction_error_list_df = pd.DataFrame(clinical_df['Participant_ID'])
-    clinical_df = clinical_df.set_index('Participant_ID')
+    reconstruction_error_list_df = pd.DataFrame(clinical_df['participant_id'])
+    clinical_df = clinical_df.set_index('participant_id')
 
     for i_bootstrap in tqdm(range(n_bootstrap)):
         bootstrap_model_dir = model_dir / '{:03d}'.format(i_bootstrap)
@@ -43,7 +43,7 @@ def main(dataset_name, label_list):
         reconstruction_error_list_df['Reconstruction error {:d}'.format(i_bootstrap)] = reconstruction_error_df[
             'Reconstruction error'].values
 
-    reconstruction_error_list_df = reconstruction_error_list_df.set_index('Participant_ID')
+    reconstruction_error_list_df = reconstruction_error_list_df.set_index('participant_id')
 
     hypothesis_df = pd.DataFrame()
     for group_labels in combinations(label_list, 2):

@@ -19,7 +19,6 @@ PROJECT_ROOT = Path.cwd()
 def main():
     """Clean UK Biobank scanner 1 data."""
     # ----------------------------------------------------------------------------------------
-    demographic_path = PROJECT_ROOT / 'data' / 'BIOBANK' / 'ukb22321.csv'
     participants_path = PROJECT_ROOT / 'data' / 'BIOBANK' / 'participants.tsv'
     ids_path = PROJECT_ROOT / 'data' / 'BIOBANK' / 'freesurferData.csv'
 
@@ -29,16 +28,10 @@ def main():
     outputs_dir = PROJECT_ROOT / 'outputs'
     outputs_dir.mkdir(exist_ok=True)
 
-    dataset = load_demographic_data(demographic_path, ids_path)
+    dataset = load_demographic_data(participants_path, ids_path)
 
-    participants_df = pd.read_csv(participants_path, sep='\t', usecols=['Participant_ID', 'Diagn'])
-    participants_df['ID'] = participants_df['Participant_ID'].str.split('-').str[1]
-    participants_df['ID'] = pd.to_numeric(participants_df['ID'])
-
-    dataset = pd.merge(dataset, participants_df, on='ID')
-
-    # Exclude ages with <100 participants,
-    dataset = dataset.loc[dataset['Age'] > 46]
+    # Exclude subjects outside [47, 73] interval (ages with <100 participants).
+    dataset = dataset.loc[(dataset['Age'] >= 47) & (dataset['Age'] <= 73)]
 
     # Exclude non-white ethnicities due to small subgroups
     dataset = dataset.loc[dataset['Ethnicity'] == 'White']
@@ -46,10 +39,10 @@ def main():
     # Exclude scanner02
     dataset = dataset.loc[dataset['Dataset'] == 'BIOBANK-SCANNER01']
 
-    # Exclude patients
+    # Exclude subjects with previous hospitalization
     dataset = dataset.loc[dataset['Diagn'] == 1]
 
-    output_ids_df = pd.DataFrame(dataset['Participant_ID'])
+    output_ids_df = pd.DataFrame(dataset['participant_id'])
     output_ids_df.to_csv(outputs_dir / output_ids_filename, index=False)
 
 
