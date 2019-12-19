@@ -25,53 +25,27 @@ def cliff_delta(X, Y):
 
 def load_dataset(demographic_path, ids_path, freesurfer_path):
     """Load dataset."""
-    dataset = load_demographic_data(demographic_path, ids_path)
+    demographic_data = load_demographic_data(demographic_path, ids_path)
 
-    # Loading Freesurfer data
-    freesurfer = pd.read_csv(freesurfer_path)
+    freesurfer_df = pd.read_csv(freesurfer_path)
 
-    # Create a new col in FS dataset to contain Participant_ID
-    freesurfer['participant_id'] = freesurfer['Image_ID'].str.split('_', expand=True)[0]
+    dataset_df = pd.merge(freesurfer_df, demographic_data, on='Image_ID')
 
-    # Merge FS dataset and demographic dataset to access age
-    dataset = pd.merge(freesurfer, dataset, on='participant_id')
-
-    if 'Image_ID_y' in dataset.columns:
-        raise('MERGE')
-        # warnings.warn('WARNING: MERGING Image_ID_y \n')
-        # dataset['Image_ID'] = dataset['Image_ID_x']
-        # dataset = dataset.drop(['Image_ID_y', 'Image_ID_x'], axis=1)
-
-    return dataset
+    return dataset_df
 
 
 def load_demographic_data(demographic_path, ids_path):
     """Load dataset using selected ids."""
 
     demographic_df = pd.read_csv(demographic_path, sep='\t')
-
-    demographic_df['ID'] = demographic_df['participant_id'].str.split('-').str[1]
     demographic_df = demographic_df.dropna()
 
-    ids_df = pd.read_csv(ids_path)
-    # Create a new 'ID' column to match supplementary demographic data
-    if 'participant_id' in ids_df.columns:
-        # For create_homogeneous_data.py output
-        ids = ids_df['participant_id'].str.split('-').str[1]
-    else:
-        # For freesurferData dataframe
-        ids = ids_df['Image_ID'].str.split('_').str[0]
-        ids = ids.str.split('-').str[1]
+    ids_df = pd.read_csv(ids_path, usecols=['Image_ID'])
+    ids_df['participant_id'] = ids_df['Image_ID'].str.split('_').str[0]
 
-    ids_df = pd.DataFrame(columns=['ID'], data=ids.values)
+    dataset_df = pd.merge(ids_df, demographic_df, on='participant_id')
 
-    # Merge supplementary demographic data with ids
-    demographic_df['ID'] = demographic_df['ID'].apply(str)
-    ids_df['ID'] = ids_df['ID'].apply(str)
-
-    dataset = pd.merge(ids_df, demographic_df, on='ID')
-
-    return dataset
+    return dataset_df
 
 
 COLUMNS_NAME = ['Left-Lateral-Ventricle',

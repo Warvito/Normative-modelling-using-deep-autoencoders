@@ -3,8 +3,6 @@
 import argparse
 from pathlib import Path
 
-import pandas as pd
-
 from utils import load_demographic_data
 
 PROJECT_ROOT = Path.cwd()
@@ -29,7 +27,7 @@ def main(dataset_name):
 
     dataset = dataset.drop_duplicates(subset='participant_id')
 
-    output_ids_df = pd.DataFrame(dataset['participant_id'])
+    output_ids_df = dataset[['Image_ID']]
     output_ids_df.to_csv(outputs_dir / output_ids_filename, index=False)
 
 

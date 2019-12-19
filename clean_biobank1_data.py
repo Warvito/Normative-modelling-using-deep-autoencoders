@@ -9,8 +9,6 @@ mental or brain disorder.
 """
 from pathlib import Path
 
-import pandas as pd
-
 from utils import load_demographic_data
 
 PROJECT_ROOT = Path.cwd()
@@ -42,7 +40,7 @@ def main():
     # Exclude subjects with previous hospitalization
     dataset = dataset.loc[dataset['Diagn'] == 1]
 
-    output_ids_df = pd.DataFrame(dataset['participant_id'])
+    output_ids_df = dataset[['Image_ID']]
     output_ids_df.to_csv(outputs_dir / output_ids_filename, index=False)
 
 
