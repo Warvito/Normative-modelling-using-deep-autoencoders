@@ -41,9 +41,19 @@ def load_demographic_data(demographic_path, ids_path):
     demographic_df = demographic_df.dropna()
 
     ids_df = pd.read_csv(ids_path, usecols=['Image_ID'])
-    ids_df['participant_id'] = ids_df['Image_ID'].str.split('_').str[0]
 
-    dataset_df = pd.merge(ids_df, demographic_df, on='participant_id')
+    if 'Session_ID' in demographic_df.columns:
+        demographic_df['uid'] = demographic_df['participant_id'] + '_' + demographic_df['Session_ID']
+
+        ids_df['uid'] = ids_df['Image_ID'].str.split('_').str[0]+'_'+ids_df['Image_ID'].str.split('_').str[1]
+
+        dataset_df = pd.merge(ids_df, demographic_df, on='uid')
+        dataset_df = dataset_df.drop(columns=['uid'])
+
+    else:
+        ids_df['participant_id'] = ids_df['Image_ID'].str.split('_').str[0]
+
+        dataset_df = pd.merge(ids_df, demographic_df, on='participant_id')
 
     return dataset_df
 
