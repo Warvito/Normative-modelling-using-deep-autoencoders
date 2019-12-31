@@ -60,7 +60,7 @@ def compute_classification_performance(reconstruction_error_df, clinical_df, dis
 def main(dataset_name, disease_label):
     """Perform the group analysis."""
     # ----------------------------------------------------------------------------
-    n_bootstrap = 1000
+    n_bootstrap = 20
 
     model_name = 'supervised_aae'
 

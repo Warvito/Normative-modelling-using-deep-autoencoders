@@ -1,18 +1,23 @@
-# Initiate virtual enviroment
-source venv/bin/activate
-
-# Make all files executable
-chmod -R +x ./
-
-# Run python scripts
-# ----------------------------- Getting data -------------------------------------
-# Download data from network-attached storage (MLMH lab use only)
-./download_datasets.py
-
+## Initiate virtual enviroment
+#source venv/bin/activate
+#
+## Make all files executable
+#chmod -R +x ./
+#
+## Run python scripts
+## ----------------------------- Getting data -------------------------------------
+## Download data from network-attached storage (MLMH lab use only)
+#./download_datasets.py
+#
 # Combining data from different scanners
-./combine_sites_data.py -D "ADNI"
+./combine_sites_data.py -D "ADNI2"
+./combine_sites_data.py -D "ADNIGO"
+./combine_sites_data.py -D "ADNI3"
 ./combine_sites_data.py -D "TOMC"
+./combine_sites_data.py -D "AIBL"
 ./combine_sites_data.py -D "BIOBANK"
+
+./combine_adni_data.py
 
 # ----------------------------- Preprocessing ------------------------------------
 # Clean UK Biobank data
@@ -22,11 +27,13 @@ chmod -R +x ./
 ./clean_clinical_data.py -D "ADNI"
 ./clean_clinical_data.py -D "TOMC"
 ./clean_clinical_data.py -D "OASIS1"
+./clean_clinical_data.py -D "AIBL"
 
 # Make clinical datasets homogeneous accross age and gender
 ./demographic_balancing_adni_data.py
 ./demographic_balancing_tomc_data.py
 ./demographic_balancing_oasis1_data.py
+./demographic_balancing_aibl_data.py
 
 # ------------------------Bootstrap Analysis -------------------------------------
 # Create list of ids for bootstrap analysis
@@ -39,6 +46,7 @@ chmod -R +x ./
 ./bootstrap_test_aae_supervised.py -D "ADNI"
 ./bootstrap_test_aae_supervised.py -D "TOMC"
 ./bootstrap_test_aae_supervised.py -D "OASIS1"
+./bootstrap_test_aae_supervised.py -D "AIBL"
 
 # Perform statistical analysis
 ./bootstrap_group_analysis_1x1.py -D "ADNI" -L 17
@@ -47,6 +55,9 @@ chmod -R +x ./
 
 ./bootstrap_group_analysis_1x1.py -D "TOMC" -L 17
 ./bootstrap_group_analysis_1x1.py -D "TOMC" -L 18
+
+./bootstrap_group_analysis_1x1.py -D "AIBL" -L 17
+./bootstrap_group_analysis_1x1.py -D "AIBL" -L 18
 
 ./bootstrap_group_analysis_1x1.py -D "OASIS1" -L 17
 

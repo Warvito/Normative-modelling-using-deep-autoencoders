@@ -12,7 +12,7 @@ def main():
     output_dir = PROJECT_ROOT / 'data' / 'ADNI'
     output_dir.mkdir(exist_ok=True)
 
-    dataset_names = ['ADNIGO', 'ADNI2']
+    dataset_names = ['ADNIGO', 'ADNI2', 'ADNI3']
     adni_datasets_freesurfer = pd.DataFrame()
     adni_datasets_participants = pd.DataFrame()
     for dataset_name in dataset_names:

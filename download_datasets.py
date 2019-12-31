@@ -48,6 +48,7 @@ def main():
     data_dir.mkdir(exist_ok=True)
 
     selected_datasets = ['BIOBANK', 'ADNI2', 'ADNI3', 'ADNIGO', 'TOMC', 'OASIS1', 'AIBL']
+    # selected_datasets = ['BIOBANK', 'ADNI3', 'ADNIGO', 'TOMC', 'OASIS1', 'AIBL']
 
     for dataset_name in selected_datasets:
         selected_path = DEEPLAB_VOLUME / 'BIDS_data' / dataset_name

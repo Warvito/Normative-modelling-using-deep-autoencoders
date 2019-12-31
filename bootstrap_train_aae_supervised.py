@@ -21,7 +21,7 @@ def main():
     The script also the scaler and the demographic data encoder.
     """
     # ----------------------------------------------------------------------------
-    n_bootstrap = 1000
+    n_bootstrap = 10
     model_name = 'supervised_aae'
 
     participants_path = PROJECT_ROOT / 'data' / 'BIOBANK' / 'participants.tsv'
@@ -170,7 +170,7 @@ def main():
         # -------------------------------------------------------------------------------------------------------------
         # Training loop
         global_step = 0
-        n_epochs = 200
+        n_epochs = 1000
         gamma = 0.98
         scale_fn = lambda x: gamma ** x
         for epoch in range(n_epochs):

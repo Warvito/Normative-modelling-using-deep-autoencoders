@@ -18,10 +18,11 @@ PROJECT_ROOT = Path.cwd()
 def main():
     """Make predictions using trained normative models."""
     # ----------------------------------------------------------------------------
-    n_bootstrap = 1000
+    n_bootstrap = 10
     model_name = 'supervised_aae'
 
     selected_region = COLUMNS_NAME.index('Left-Hippocampus')
+    selected_region = 0
     tiv = 1535013
 
     # ----------------------------------------------------------------------------
@@ -38,6 +39,8 @@ def main():
 
     age_range = range(47, 73)
     n_samples = 1000
+    ys = np.array([])
+    xs = np.array([])
 
     reconstruction_list = np.zeros((len(age_range),n_bootstrap*n_samples))
     # ----------------------------------------------------------------------------
@@ -65,9 +68,13 @@ def main():
 
             # ----------------------------------------------------------------------------
             reconstruction = decoder(tf.concat([sampled_encoded, y_data], axis=1), training=False)
-            volumes = scaler.inverse_transform(reconstruction)
+            # volumes = scaler.inverse_transform(reconstruction)
+            volumes = reconstruction
 
             reconstruction_list[i_age,n_samples*i_bootstrap:n_samples*(i_bootstrap+1)] = volumes[:,selected_region]
+            ys = np.hstack([ys, volumes[:,selected_region]])
+            xs = np.hstack([xs, np.ones_like(volumes[:,selected_region])*selected_age])
+
 
 
     # Draw lines
