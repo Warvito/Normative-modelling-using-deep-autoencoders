@@ -68,7 +68,7 @@ one_hot_gender = enc_gender.fit_transform(gender)
 
 y_data = np.concatenate((one_hot_age, one_hot_gender), axis=1).astype('float32')
 
-n_subj = 500
+n_subj = 5000
 age = age[:n_subj]
 y_data = y_data[:n_subj, :]
 x_data_normalized = x_data_normalized[:n_subj,:]
@@ -103,11 +103,11 @@ accuracy = tf.keras.metrics.BinaryAccuracy()
 def discriminator_loss(real_output, fake_output):
     loss_real = cross_entropy(tf.ones_like(real_output), real_output)
     loss_fake = cross_entropy(tf.zeros_like(fake_output), fake_output)
-    return loss_fake + loss_real
+    return (loss_fake + loss_real)/2
 
 
 def generator_loss(fake_output):
-    return cross_entropy(tf.ones_like(fake_output), fake_output)
+    return (cross_entropy(tf.ones_like(fake_output), fake_output))/2
 
 
 # -------------------------------------------------------------------------------------------------------------
