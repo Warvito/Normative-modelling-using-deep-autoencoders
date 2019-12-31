@@ -12,61 +12,14 @@ Normative modelling is an emerging method that allows quantifying how individual
 Test our  models in this Google's colab script <a href="https://colab.research.google.com/github/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/notebooks/predict_deviation_bootstrap.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 
-## Requirements
-- Python 3
-- [Tensorflow 2.0](https://www.tensorflow.org/)
-- [Numpy](http://www.numpy.org/)
-- [Matplotlib](https://matplotlib.org/)
-
-
-## Installing the dependencies
-Install virtualenv and creating a new virtual environment:
-
-    pip install virtualenv
-    virtualenv -p /usr/bin/python3 ./venv
-
-Install dependencies
-
-    pip install -r requirements.txt
-
+## Installing the dependencies and running scripts
+Check out our [wiki](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/wiki) to cnfigurate your system enviroment to run our scripts on [virtualenv](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/wiki/Running-code-using-virtual-enviroment) or [Docker](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/wiki/Running-code-using-Docker).
 
 ## Script execution sequence
-The sequence of our codes and its arguments can be found in the commands_list.sh file. 
-The following list indicates the different phases and its scripts.
+The sequence of our scripts and its arguments can be found in the [commands_list.sh](commands_list.sh) and [docker_command_list.sh](docker_command_list.sh) files. Check also our [wiki](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/wiki/Script-execution-sequence) with a small explanation of each file.
 
-#### 0. Getting data
-Script for internal use (Machine Learning in Mental Health Lab only).
-1. [download_datasets.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/download_datasets.py)
-2. [combine_sites_data.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/combine_sites_data.py)
-
-#### 1. Preprocessing
-1. [clean_biobank1_data.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/clean_biobank1_data.py)
-3. [clean_clinical_data.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/clean_clinical_data.py)
-4. [demographic_balancing_adni_data.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/demographic_balancing_adni_data.py)
-5. [demographic_balancing_tomc_data.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/demographic_balancing_tomc_data.py)
-6. [demographic_balancing_oasis1_data.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/demographic_balancing_oasis1_data.py)
-
-#### 2a. Bootstrap analysis
-Analysis where we measure the performance of the normative approach using a bootstrap method. 
-These scripts obtain the results from sections 3.1, 3.2, 3.3 of the paper. 
-1. [bootstrap_create_ids.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/bootstrap_create_ids.py)
-2. [bootstrap_train_aae_supervised.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/bootstrap_train_aae_supervised.py)
-3. [bootstrap_test_aae_supervised.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/bootstrap_test_aae_supervised.py)
-4. [bootstrap_group_analysis_1x1.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/bootstrap_group_analysis_1x1.py)
-5. [bootstrap_create_figures.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/bootstrap_create_figures.py)
-6. [bootstrap_hypothesis_test.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/bootstrap_hypothesis_test.py)
-
-#### 2b. Classifier analysis
-Analysis where we measure the performance of the binary classification (using RVM).
-To estimate the performance of the model, we used the .632+ bootstrap method.
-These scripts obtain the results from sections 3.4 of the paper. 
-1. [classifier_create_ids.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/classifier_create_ids.py)
-2. [classifier_train.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/classifier_train.py)
-3. [classifier_group_analysis_1x1.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/classifier_group_analysis_1x1.py)
-4. [bootstrap_normative_vs_classifier.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/bootstrap_normative_vs_classifier.py)
-
-#### 2c. Miscellaneous 
-1. [univariate_analysis.py](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/blob/master/univariate_analysis.py)
+## Getting data
+Check our [wiki](https://github.com/Warvito/Normative-modelling-using-deep-autoencoders/wiki/Getting-data) with the instructions to get the used data in this study from their original site.
 
 ## Citation
 If you find this code useful for your research, please cite:
