@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script to create homogeneous samples for the TOMC dataset (a.k.a FBF_Brescia dataset).
+"""Script to create homogeneous samples for the AIBL dataset.
 
 Labels encoding
 "1": "Healthy Controls",
@@ -9,7 +9,6 @@ Labels encoding
 from pathlib import Path
 
 import pandas as pd
-import numpy as np
 from scipy.stats import chi2_contingency, ttest_ind, f_oneway
 
 from utils import load_dataset
@@ -41,10 +40,8 @@ def main():
     _, p_value, _, _ = chi2_contingency(contingency_table[[17, 18]], correction=False)
     print('Gender - MCI vs AD p value {}'.format(p_value))
 
-
     # HC have too many women
     # Remove oldest ones to help to balance age
-
     hc_age = dataset_df[dataset_df['Diagn'] == 1].Age.values
 
     index_to_remove = dataset_df[(dataset_df['Diagn'] == 1) & (dataset_df['Gender'] == 0)].iloc[hc_age.argmax()].name
@@ -60,10 +57,10 @@ def main():
         print('Gender - HC vs AD p value {}'.format(p_value))
         _, p_value, _, _ = chi2_contingency(contingency_table[[1, 18]], correction=False)
         print('Gender - HC vs MCI p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[17, 18]], correction=False)
-        print('Gender - MCI vs AD p value {}'.format(p_value))
 
-        index_to_remove = dataset_corrected_df[(dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0)].iloc[hc_age.argmax()].name
+        index_to_remove = \
+        dataset_corrected_df[(dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0)].iloc[
+            hc_age.argmax()].name
         dataset_corrected_df = dataset_corrected_df.drop(index_to_remove, axis=0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
@@ -83,7 +80,8 @@ def main():
     print('Age - MCI vs AD p value {}'.format(p_value))
 
     # hc is too old, droping some of the youngest
-    dataset_corrected_df = dataset_corrected_df.drop(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name, axis=0)
+    dataset_corrected_df = dataset_corrected_df.drop(
+        dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name, axis=0)
     dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
     hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
 
@@ -94,6 +92,12 @@ def main():
         print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name)
         print(hc_age)
         print('')
+
+        _, p_value = ttest_ind(hc_age, ad_age)
+        print('Age - HC vs AD p value {}'.format(p_value))
+        _, p_value = ttest_ind(hc_age, mci_age)
+        print('Age - HC vs MCI p value {}'.format(p_value))
+
         dataset_corrected_df = dataset_corrected_df.drop(
             dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name, axis=0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
@@ -122,7 +126,17 @@ def main():
     print(chi2_contingency(contingency_table, correction=False))
     print(f_oneway(hc_age, ad_age, mci_age))
 
-    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 18])].Image_ID)
+    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 18])])
+
+    hc_age = homogeneous_df[homogeneous_df['Diagn'] == 1].Age.values
+    ad_age = homogeneous_df[homogeneous_df['Diagn'] == 17].Age.values
+    mci_age = homogeneous_df[homogeneous_df['Diagn'] == 18].Age.values
+
+    contingency_table = pd.crosstab(homogeneous_df.Gender, homogeneous_df.Diagn)
+    print(chi2_contingency(contingency_table, correction=False))
+    print(f_oneway(hc_age, ad_age, mci_age))
+
+    homogeneous_df = homogeneous_df[['Image_ID']]
     homogeneous_df.to_csv(outputs_dir / (dataset_name + '_homogeneous_ids.csv'), index=False)
 
 

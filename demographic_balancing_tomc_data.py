@@ -9,7 +9,6 @@ Labels encoding
 from pathlib import Path
 
 import pandas as pd
-import numpy as np
 from scipy.stats import chi2_contingency, ttest_ind, f_oneway
 
 from utils import load_dataset
@@ -58,18 +57,25 @@ def main():
 
     # hc is too young, droping some of the youngest
     dataset_corrected_df = dataset_df.drop(dataset_df[dataset_df['Diagn'] == 1].iloc[hc_age.argmin()].name, axis=0)
-    hc_age = np.delete(hc_age, hc_age.argmin(), 0)
+    hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
     dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
-    for _ in range(137):
-        print(hc_age.argmin())
-        print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].Age)
-        print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].name)
-        print(hc_age)
-        print('')
+    for _ in range(138):
+        hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
+
+        # print(hc_age.argmin())
+        # print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].Age)
+        # print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].name)
+        # print(hc_age)
+        # print('')
+
+        _, p_value = ttest_ind(hc_age, ad_age)
+        print('Age - HC vs AD p value {}'.format(p_value))
+        _, p_value = ttest_ind(hc_age, mci_age)
+        print('Age - HC vs MCI p value {}'.format(p_value))
+
         dataset_corrected_df = dataset_corrected_df.drop(
             dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmin()].name, axis=0)
-        hc_age = np.delete(hc_age, hc_age.argmin(), 0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
     _, p_value = ttest_ind(hc_age, ad_age)
@@ -96,7 +102,17 @@ def main():
     print(chi2_contingency(contingency_table, correction=False))
     print(f_oneway(hc_age, ad_age, mci_age))
 
-    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 18])].Image_ID)
+    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 18])])
+
+    hc_age = homogeneous_df[homogeneous_df['Diagn'] == 1].Age.values
+    ad_age = homogeneous_df[homogeneous_df['Diagn'] == 17].Age.values
+    mci_age = homogeneous_df[homogeneous_df['Diagn'] == 18].Age.values
+
+    contingency_table = pd.crosstab(homogeneous_df.Gender, homogeneous_df.Diagn)
+    print(chi2_contingency(contingency_table, correction=False))
+    print(f_oneway(hc_age, ad_age, mci_age))
+
+    homogeneous_df = homogeneous_df[['Image_ID']]
     homogeneous_df.to_csv(outputs_dir / (dataset_name + '_homogeneous_ids.csv'), index=False)
 
 

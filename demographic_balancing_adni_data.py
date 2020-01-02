@@ -7,16 +7,13 @@ Labels encoding
 "28": "Late mild cognitive impairment (LMCI)"
 "17": "Alzheimer's Disease",
 
-excluded (low number of subjects)
-"18": "Mild Cognitive Impairment"
-
-excluded (not the focus of the study)
+excluded from study
+"18": "Mild Cognitive Impairment" (excluded to simplify analysis)
 "26": "Significant Memory Concern (SMC)"
 """
 from pathlib import Path
 
 import pandas as pd
-import numpy as np
 from scipy.stats import chi2_contingency, ttest_ind, f_oneway
 
 from utils import load_dataset
@@ -95,10 +92,11 @@ def main():
         _, p_value, _, _ = chi2_contingency(contingency_table[[27, 28]], correction=False)
         print('Gender - EMCI vs LMCI p value {}'.format(p_value))
 
-        index_to_remove = dataset_corrected_df[(dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0)].iloc[hc_age.argmax()].name
+        index_to_remove = \
+        dataset_corrected_df[(dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0)].iloc[
+            hc_age.argmax()].name
         dataset_corrected_df = dataset_corrected_df.drop(index_to_remove, axis=0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
-
 
     contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)
 
@@ -122,9 +120,6 @@ def main():
     print('Gender - SMC vs LMCI p value {}'.format(p_value))
     _, p_value, _, _ = chi2_contingency(contingency_table[[27, 28]], correction=False)
     print('Gender - EMCI vs LMCI p value {}'.format(p_value))
-
-
-
 
     hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
     ad_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 17].Age.values
@@ -159,13 +154,14 @@ def main():
     print(emci_age.mean())
     print(lmci_age.mean())
 
-    # emci is too young, dropping some of the youngest
+    # hc is too old, dropping some of the oldest
     print(hc_age.argmax())
-    print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[emci_age.argmax()].Age)
-    print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[emci_age.argmax()].name)
+    print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].Age)
+    print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name)
     print('')
 
-    dataset_corrected_df = dataset_corrected_df.drop(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name, axis=0)
+    dataset_corrected_df = dataset_corrected_df.drop(
+        dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name, axis=0)
 
     for _ in range(21):
         hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
@@ -175,6 +171,7 @@ def main():
         print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].Image_ID)
         print(hc_age.argmax())
         print('')
+
         _, p_value = ttest_ind(hc_age, ad_age)
         print('Age - HC vs AD p value {}'.format(p_value))
         _, p_value = ttest_ind(hc_age, smc_age)
@@ -183,18 +180,6 @@ def main():
         print('Age - HC vs EMCI p value {}'.format(p_value))
         _, p_value = ttest_ind(hc_age, lmci_age)
         print('Age - HC vs LMCI p value {}'.format(p_value))
-        _, p_value = ttest_ind(ad_age, smc_age)
-        print('Age - AD vs SMC p value {}'.format(p_value))
-        _, p_value = ttest_ind(ad_age, emci_age)
-        print('Age - AD vs EMCI p value {}'.format(p_value))
-        _, p_value = ttest_ind(ad_age, lmci_age)
-        print('Age - AD vs LMCI p value {}'.format(p_value))
-        _, p_value = ttest_ind(smc_age, emci_age)
-        print('Age - SMC vs EMCI p value {}'.format(p_value))
-        _, p_value = ttest_ind(smc_age, lmci_age)
-        print('Age - SMC vs LMCI p value {}'.format(p_value))
-        _, p_value = ttest_ind(emci_age, lmci_age)
-        print('Age - EMCI vs LMCI p value {}'.format(p_value))
 
         print(hc_age.mean())
         print(ad_age.mean())
@@ -202,9 +187,9 @@ def main():
         print(emci_age.mean())
         print(lmci_age.mean())
 
-        dataset_corrected_df = dataset_corrected_df.drop(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name, axis=0)
+        dataset_corrected_df = dataset_corrected_df.drop(
+            dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name, axis=0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
-
 
     hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
     ad_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 17].Age.values
@@ -215,7 +200,18 @@ def main():
     print(chi2_contingency(contingency_table, correction=False))
     print(f_oneway(hc_age, ad_age, emci_age, lmci_age))
 
-    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 27, 28])].Image_ID)
+    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 27, 28])])
+
+    hc_age = homogeneous_df[homogeneous_df['Diagn'] == 1].Age.values
+    ad_age = homogeneous_df[homogeneous_df['Diagn'] == 17].Age.values
+    emci_age = homogeneous_df[homogeneous_df['Diagn'] == 27].Age.values
+    lmci_age = homogeneous_df[homogeneous_df['Diagn'] == 28].Age.values
+
+    contingency_table = pd.crosstab(homogeneous_df.Gender, homogeneous_df.Diagn)
+    print(chi2_contingency(contingency_table, correction=False))
+    print(f_oneway(hc_age, ad_age, emci_age, lmci_age))
+
+    homogeneous_df = homogeneous_df[['Image_ID']]
     homogeneous_df.to_csv(outputs_dir / (dataset_name + '_homogeneous_ids.csv'), index=False)
 
 
