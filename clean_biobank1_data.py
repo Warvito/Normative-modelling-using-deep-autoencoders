@@ -41,6 +41,9 @@ def main():
     dataset = dataset.loc[dataset['Diagn'] == 1]
 
     output_ids_df = dataset[['Image_ID']]
+
+    assert sum(output_ids_df.duplicated()) == 0
+
     output_ids_df.to_csv(outputs_dir / output_ids_filename, index=False)
 
 
