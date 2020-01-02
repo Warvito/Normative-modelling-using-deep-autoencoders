@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script to combine the data from different sites from the same dataset."""
+"""Script to combine the data from the same dataset but different sites ."""
 import argparse
 from pathlib import Path
 
@@ -22,7 +22,7 @@ def main(dataset_name):
 
     Script will search for all neuroimaging files (i.e. freesurferData.csv) and demographic
     data (i.e. participants.tsv) inside the specified data_dir (e.g. PROJECT_ROOT / 'data' /
-    'ADNI')
+    'ADNI2')
     """
     # ----------------------------------------------------------------------------------------
     data_dir = PROJECT_ROOT / 'data' / dataset_name
