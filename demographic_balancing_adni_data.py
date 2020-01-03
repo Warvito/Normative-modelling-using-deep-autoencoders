@@ -96,10 +96,10 @@ def main():
     dataset_corrected_df = dataset_df
 
     for _ in range(54):
-        conditional_mask = (dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0)
+        conditional_mask = (dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0) #TODO: check gender
 
         hc_age = dataset_corrected_df[conditional_mask].Age.values
-        index_to_remove = dataset_corrected_df[conditional_mask].iloc[hc_age.argmax()].name
+        index_to_remove = dataset_corrected_df[conditional_mask].iloc[hc_age.argmax()].name #TODO: Check if index_to_remove is necessary, or if we can use hc_age.argmax instead
 
         dataset_corrected_df = dataset_corrected_df.drop(index_to_remove, axis=0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
