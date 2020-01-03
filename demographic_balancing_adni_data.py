@@ -12,6 +12,7 @@ excluded from study
 "26": "Significant Memory Concern (SMC)"
 """
 from pathlib import Path
+import math
 
 import pandas as pd
 from scipy.stats import chi2_contingency, ttest_ind, f_oneway
@@ -29,190 +30,120 @@ def main():
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
 
-    # ----------------------------------------------------------------------------------------
     outputs_dir = PROJECT_ROOT / 'outputs'
     ids_path = outputs_dir / (dataset_name + '_cleaned_ids.csv')
 
     dataset_df = load_dataset(participants_path, ids_path, freesurfer_path)
-    print(dataset_df.groupby('Diagn').count())
+    dataset_df = dataset_df[dataset_df['Diagn'].isin([1, 17, 27, 28])]
+
+    # ----------------------------------------------------------------------------------------
+    print('Analysing {:}'.format(dataset_name))
+    print('Total of participants = {:}'.format(len(dataset_df)))
+    print('')
+    print('Number of participants per diagnosis')
+    print(dataset_df.groupby('Diagn')['Image_ID'].count())
+    print('')
 
     contingency_table = pd.crosstab(dataset_df.Gender, dataset_df.Diagn)
+    print('Contigency table of gender x diagnosis')
+    print(contingency_table)
+    print('')
 
-    _, p_value, _, _ = chi2_contingency(contingency_table[[1, 17]], correction=False)
-    print('Gender - HC vs AD p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[1, 26]], correction=False)
-    print('Gender - HC vs SMC p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[1, 27]], correction=False)
-    print('Gender - HC vs EMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[1, 28]], correction=False)
-    print('Gender - HC vs LMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[17, 26]], correction=False)
-    print('Gender - AD vs SMC p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[17, 27]], correction=False)
-    print('Gender - AD vs EMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[17, 28]], correction=False)
-    print('Gender - AD vs LMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[26, 27]], correction=False)
-    print('Gender - SMC vs EMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[26, 28]], correction=False)
-    print('Gender - SMC vs LMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[27, 28]], correction=False)
-    print('Gender - EMCI vs LMCI p value {}'.format(p_value))
+    def print_age_stats(dataset_df):
+        hc_age = dataset_df[dataset_df['Diagn'] == 1].Age.values
+        emci_age = dataset_df[dataset_df['Diagn'] == 27].Age.values
+        lmci_age = dataset_df[dataset_df['Diagn'] == 28].Age.values
+        ad_age = dataset_df[dataset_df['Diagn'] == 17].Age.values
+
+        print('Age per diagnosis')
+        print('HC = {:.1f}±{:.1f} [{:d}, {:d}]'.format(hc_age.mean(), hc_age.std(),
+                                                       math.ceil(hc_age.min()), math.ceil(hc_age.max())))
+        print('EMCI = {:.1f}±{:.1f} [{:d}, {:d}]'.format(emci_age.mean(), emci_age.std(),
+                                                         math.ceil(emci_age.min()), math.ceil(emci_age.max())))
+        print('LMCI = {:.1f}±{:.1f} [{:d}, {:d}]'.format(lmci_age.mean(), lmci_age.std(),
+                                                         math.ceil(lmci_age.min()), math.ceil(lmci_age.max())))
+        print('AD = {:.1f}±{:.1f} [{:d}, {:d}]'.format(ad_age.mean(), ad_age.std(),
+                                                       math.ceil(ad_age.min()), math.ceil(ad_age.max())))
+        print('')
+
+    print_age_stats(dataset_df)
+
+    # ----------------------------------------------------------------------------------------
+    # Gender analysis
+    print('------------- GENDER ANALYSIS ----------------')
+
+    def print_gender_analysis(contingency_table):
+        _, p_value, _, _ = chi2_contingency(contingency_table[[1, 27]], correction=False)
+        print('Gender - HC vs EMCI p value {:.4f}'.format(p_value))
+        _, p_value, _, _ = chi2_contingency(contingency_table[[1, 28]], correction=False)
+        print('Gender - HC vs LMCI p value {:.4f}'.format(p_value))
+        _, p_value, _, _ = chi2_contingency(contingency_table[[1, 17]], correction=False)
+        print('Gender - HC vs AD p value {:.4f}'.format(p_value))
+        _, p_value, _, _ = chi2_contingency(contingency_table[[17, 27]], correction=False)
+        print('Gender - AD vs EMCI p value {:.4f}'.format(p_value))
+        _, p_value, _, _ = chi2_contingency(contingency_table[[17, 28]], correction=False)
+        print('Gender - AD vs LMCI p value {:.4f}'.format(p_value))
+        _, p_value, _, _ = chi2_contingency(contingency_table[[27, 28]], correction=False)
+        print('Gender - EMCI vs LMCI p value {:.4f}'.format(p_value))
+        _, p_value, _, _ = chi2_contingency(contingency_table, correction=False)
+        print('Gender - TOTAL p value {:.4f}'.format(p_value))
+        print('')
+
+    print_gender_analysis(contingency_table)
 
     # HC have too many men
     # Removing oldest men to help balancing age
-    hc_age = dataset_df[dataset_df['Diagn'] == 1].Age.values
+    dataset_corrected_df = dataset_df
 
-    index_to_remove = dataset_df[(dataset_df['Diagn'] == 1) & (dataset_df['Gender'] == 0)].iloc[hc_age.argmax()].name
-    dataset_corrected_df = dataset_df.drop(index_to_remove, axis=0)
-    dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
+    for _ in range(54):
+        conditional_mask = (dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0)
 
-    for _ in range(55):
-        contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)
-        hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
+        hc_age = dataset_corrected_df[conditional_mask].Age.values
+        index_to_remove = dataset_corrected_df[conditional_mask].iloc[hc_age.argmax()].name
 
-        _, p_value, _, _ = chi2_contingency(contingency_table[[1, 17]], correction=False)
-        print('Gender - HC vs AD p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[1, 26]], correction=False)
-        print('Gender - HC vs SMC p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[1, 27]], correction=False)
-        print('Gender - HC vs EMCI p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[1, 28]], correction=False)
-        print('Gender - HC vs LMCI p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[17, 26]], correction=False)
-        print('Gender - AD vs SMC p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[17, 27]], correction=False)
-        print('Gender - AD vs EMCI p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[17, 28]], correction=False)
-        print('Gender - AD vs LMCI p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[26, 27]], correction=False)
-        print('Gender - SMC vs EMCI p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[26, 28]], correction=False)
-        print('Gender - SMC vs LMCI p value {}'.format(p_value))
-        _, p_value, _, _ = chi2_contingency(contingency_table[[27, 28]], correction=False)
-        print('Gender - EMCI vs LMCI p value {}'.format(p_value))
-
-        index_to_remove = \
-        dataset_corrected_df[(dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0)].iloc[
-            hc_age.argmax()].name
         dataset_corrected_df = dataset_corrected_df.drop(index_to_remove, axis=0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
-    contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)
+        contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)
+        print_gender_analysis(contingency_table)
 
-    _, p_value, _, _ = chi2_contingency(contingency_table[[1, 17]], correction=False)
-    print('Gender - HC vs AD p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[1, 26]], correction=False)
-    print('Gender - HC vs SMC p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[1, 27]], correction=False)
-    print('Gender - HC vs EMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[1, 28]], correction=False)
-    print('Gender - HC vs LMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[17, 26]], correction=False)
-    print('Gender - AD vs SMC p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[17, 27]], correction=False)
-    print('Gender - AD vs EMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[17, 28]], correction=False)
-    print('Gender - AD vs LMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[26, 27]], correction=False)
-    print('Gender - SMC vs EMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[26, 28]], correction=False)
-    print('Gender - SMC vs LMCI p value {}'.format(p_value))
-    _, p_value, _, _ = chi2_contingency(contingency_table[[27, 28]], correction=False)
-    print('Gender - EMCI vs LMCI p value {}'.format(p_value))
+    # ----------------------------------------------------------------------------------------
+    # Age analysis
+    print('------------- AGE ANALYSIS ----------------')
+    print_age_stats(dataset_corrected_df)
 
-    hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
-    ad_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 17].Age.values
-    smc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 26].Age.values
-    emci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 27].Age.values
-    lmci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 28].Age.values
+    def print_age_analysis(dataset_df):
+        hc_age = dataset_df[dataset_df['Diagn'] == 1].Age.values
+        emci_age = dataset_df[dataset_df['Diagn'] == 27].Age.values
+        lmci_age = dataset_df[dataset_df['Diagn'] == 28].Age.values
+        ad_age = dataset_df[dataset_df['Diagn'] == 17].Age.values
 
-    _, p_value = ttest_ind(hc_age, ad_age)
-    print('Age - HC vs AD p value {}'.format(p_value))
-    _, p_value = ttest_ind(hc_age, smc_age)
-    print('Age - HC vs SMC p value {}'.format(p_value))
-    _, p_value = ttest_ind(hc_age, emci_age)
-    print('Age - HC vs EMCI p value {}'.format(p_value))
-    _, p_value = ttest_ind(hc_age, lmci_age)
-    print('Age - HC vs LMCI p value {}'.format(p_value))
-    _, p_value = ttest_ind(ad_age, smc_age)
-    print('Age - AD vs SMC p value {}'.format(p_value))
-    _, p_value = ttest_ind(ad_age, emci_age)
-    print('Age - AD vs EMCI p value {}'.format(p_value))
-    _, p_value = ttest_ind(ad_age, lmci_age)
-    print('Age - AD vs LMCI p value {}'.format(p_value))
-    _, p_value = ttest_ind(smc_age, emci_age)
-    print('Age - SMC vs EMCI p value {}'.format(p_value))
-    _, p_value = ttest_ind(smc_age, lmci_age)
-    print('Age - SMC vs LMCI p value {}'.format(p_value))
-    _, p_value = ttest_ind(emci_age, lmci_age)
-    print('Age - EMCI vs LMCI p value {}'.format(p_value))
-
-    print(hc_age.mean())
-    print(ad_age.mean())
-    print(smc_age.mean())
-    print(emci_age.mean())
-    print(lmci_age.mean())
-
-    # hc is too old, dropping some of the oldest
-    print(hc_age.argmax())
-    print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].Age)
-    print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name)
-    print('')
-
-    dataset_corrected_df = dataset_corrected_df.drop(
-        dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name, axis=0)
-
-    for _ in range(21):
-        hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
-
-        print(hc_age.argmax())
-        print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].Age)
-        print(dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].Image_ID)
-        print(hc_age.argmax())
+        _, p_value = ttest_ind(hc_age, emci_age)
+        print('Age - HC vs EMCI p value {:.4f}'.format(p_value))
+        _, p_value = ttest_ind(hc_age, lmci_age)
+        print('Age - HC vs LMCI p value {:.4f}'.format(p_value))
+        _, p_value = ttest_ind(hc_age, ad_age)
+        print('Age - HC vs AD p value {:.4f}'.format(p_value))
+        _, p_value = ttest_ind(ad_age, emci_age)
+        print('Age - AD vs EMCI p value {:.4f}'.format(p_value))
+        _, p_value = ttest_ind(ad_age, lmci_age)
+        print('Age - AD vs LMCI p value {:.4f}'.format(p_value))
+        _, p_value = ttest_ind(emci_age, lmci_age)
+        print('Age - EMCI vs LMCI p value {:.4f}'.format(p_value))
+        print('Age - TOTAL p value {:.4f}'.format(f_oneway(hc_age, ad_age, emci_age, lmci_age).pvalue))
+        print()
         print('')
 
-        _, p_value = ttest_ind(hc_age, ad_age)
-        print('Age - HC vs AD p value {}'.format(p_value))
-        _, p_value = ttest_ind(hc_age, smc_age)
-        print('Age - HC vs SMC p value {}'.format(p_value))
-        _, p_value = ttest_ind(hc_age, emci_age)
-        print('Age - HC vs EMCI p value {}'.format(p_value))
-        _, p_value = ttest_ind(hc_age, lmci_age)
-        print('Age - HC vs LMCI p value {}'.format(p_value))
+    print_age_analysis(dataset_corrected_df)
 
-        print(hc_age.mean())
-        print(ad_age.mean())
-        print(smc_age.mean())
-        print(emci_age.mean())
-        print(lmci_age.mean())
+    # ----------------------------------------------------------------------------------------
+    # Final dataset
+    print('------------- FINAL DATASET ----------------')
+    print_gender_analysis(contingency_table)
+    print_age_stats(dataset_corrected_df)
+    print_age_analysis(dataset_corrected_df)
 
-        dataset_corrected_df = dataset_corrected_df.drop(
-            dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].iloc[hc_age.argmax()].name, axis=0)
-        dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
-
-    hc_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 1].Age.values
-    ad_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 17].Age.values
-    emci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 27].Age.values
-    lmci_age = dataset_corrected_df[dataset_corrected_df['Diagn'] == 28].Age.values
-
-    contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)
-    print(chi2_contingency(contingency_table, correction=False))
-    print(f_oneway(hc_age, ad_age, emci_age, lmci_age))
-
-    homogeneous_df = pd.DataFrame(dataset_corrected_df[dataset_corrected_df['Diagn'].isin([1, 17, 27, 28])])
-
-    hc_age = homogeneous_df[homogeneous_df['Diagn'] == 1].Age.values
-    ad_age = homogeneous_df[homogeneous_df['Diagn'] == 17].Age.values
-    emci_age = homogeneous_df[homogeneous_df['Diagn'] == 27].Age.values
-    lmci_age = homogeneous_df[homogeneous_df['Diagn'] == 28].Age.values
-
-    contingency_table = pd.crosstab(homogeneous_df.Gender, homogeneous_df.Diagn)
-    print(chi2_contingency(contingency_table, correction=False))
-    print(f_oneway(hc_age, ad_age, emci_age, lmci_age))
-
-    homogeneous_df = homogeneous_df[['Image_ID']]
-    homogeneous_df.to_csv(outputs_dir / (dataset_name + '_homogeneous_ids.csv'), index=False)
+    dataset_corrected_df[['Image_ID']].to_csv(outputs_dir / (dataset_name + '_homogeneous_ids.csv'), index=False)
 
 
 if __name__ == "__main__":
