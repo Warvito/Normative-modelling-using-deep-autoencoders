@@ -35,6 +35,8 @@ def main():
 
     dataset_df = load_dataset(participants_path, ids_path, freesurfer_path)
     dataset_df = dataset_df[dataset_df['Diagn'].isin([1, 17, 27, 28])]
+    dataset_df = dataset_df.reset_index(drop=True)
+    dataset_df = dataset_df.set_index('participant_id')
 
     # ----------------------------------------------------------------------------------------
     print('Analysing {:}'.format(dataset_name))
@@ -91,17 +93,16 @@ def main():
 
     print_gender_analysis(contingency_table)
 
-    # HC have too many men
-    # Removing oldest men to help balancing age
+    # HC have too many women
+    # Removing oldest women to help balancing age
     dataset_corrected_df = dataset_df
 
     for _ in range(54):
-        conditional_mask = (dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0) #TODO: check gender
+        conditional_mask = (dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0)
 
-        hc_age = dataset_corrected_df[conditional_mask].Age.values
-        index_to_remove = dataset_corrected_df[conditional_mask].iloc[hc_age.argmax()].name #TODO: Check if index_to_remove is necessary, or if we can use hc_age.argmax instead
+        hc_age = dataset_corrected_df[conditional_mask].Age
 
-        dataset_corrected_df = dataset_corrected_df.drop(index_to_remove, axis=0)
+        dataset_corrected_df = dataset_corrected_df.drop(hc_age.argmax(), axis=0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
         contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)

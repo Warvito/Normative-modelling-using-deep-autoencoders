@@ -29,6 +29,8 @@ def main():
 
     dataset_df = load_dataset(participants_path, ids_path, freesurfer_path)
     dataset_df = dataset_df[dataset_df['Diagn'].isin([1, 17])]
+    dataset_df = dataset_df.reset_index(drop=True)
+    dataset_df = dataset_df.set_index('participant_id')
 
     # ----------------------------------------------------------------------------------------
     print('Analysing {:}'.format(dataset_name))

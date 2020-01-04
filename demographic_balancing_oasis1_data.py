@@ -29,6 +29,8 @@ def main():
 
     dataset_df = load_dataset(participants_path, ids_path, freesurfer_path)
     dataset_df = dataset_df[dataset_df['Diagn'].isin([1, 17])]
+    dataset_df = dataset_df.reset_index(drop=True)
+    dataset_df = dataset_df.set_index('participant_id')
 
     # ----------------------------------------------------------------------------------------
     print('Analysing {:}'.format(dataset_name))
@@ -69,7 +71,6 @@ def main():
 
     print_gender_analysis(contingency_table)
 
-
     # ----------------------------------------------------------------------------------------
     # Age analysis
     print('------------- AGE ANALYSIS ----------------')
@@ -88,13 +89,14 @@ def main():
     print_age_analysis(dataset_df)
 
     # HC is too young, dropping some of the youngest
+    dataset_corrected_df = dataset_df
+
     for _ in range(49):
         conditional_mask = dataset_corrected_df['Diagn'] == 1
 
-        hc_age = dataset_corrected_df[conditional_mask].Age.values
-        index_to_remove = dataset_corrected_df[conditional_mask].iloc[hc_age.argmin()].name
+        hc_age = dataset_corrected_df[conditional_mask].Age
 
-        dataset_corrected_df = dataset_corrected_df.drop(index_to_remove, axis=0)
+        dataset_corrected_df = dataset_corrected_df.drop(hc_age.argmin(), axis=0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
         print_age_stats(dataset_corrected_df)

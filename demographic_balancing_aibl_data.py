@@ -30,6 +30,8 @@ def main():
 
     dataset_df = load_dataset(participants_path, ids_path, freesurfer_path)
     dataset_df = dataset_df[dataset_df['Diagn'].isin([1, 17, 18])]
+    dataset_df = dataset_df.reset_index(drop=True)
+    dataset_df = dataset_df.set_index('participant_id')
 
     # ----------------------------------------------------------------------------------------
     print('Analysing {:}'.format(dataset_name))
@@ -78,16 +80,15 @@ def main():
     print_gender_analysis(contingency_table)
 
     # HC have too many women
-    # Remove oldest ones to help to balance age
+    # Removing oldest women to help balancing age
     dataset_corrected_df = dataset_df
 
-    for _ in range(26):
+    for _ in range(23):
         conditional_mask = (dataset_corrected_df['Diagn'] == 1) & (dataset_corrected_df['Gender'] == 0)
 
-        hc_age = dataset_corrected_df[conditional_mask].Age.values
-        index_to_remove = dataset_corrected_df[conditional_mask].iloc[hc_age.argmax()].name
+        hc_age = dataset_corrected_df[conditional_mask].Age
 
-        dataset_corrected_df = dataset_corrected_df.drop(index_to_remove, axis=0)
+        dataset_corrected_df = dataset_corrected_df.drop(hc_age.argmax(), axis=0)
         dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
 
         contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)
@@ -114,19 +115,6 @@ def main():
         print('')
 
     print_age_analysis(dataset_corrected_df)
-
-    # hc is too old, droping some of the youngest
-    for _ in range(6):
-        conditional_mask = dataset_corrected_df['Diagn'] == 1
-
-        hc_age = dataset_corrected_df[conditional_mask].Age.values
-        index_to_remove = dataset_corrected_df[conditional_mask].iloc[hc_age.argmax()].name
-
-        dataset_corrected_df = dataset_corrected_df.drop(index_to_remove, axis=0)
-        dataset_corrected_df = dataset_corrected_df.reset_index(drop=True)
-
-        print_age_stats(dataset_corrected_df)
-        print_age_analysis(dataset_corrected_df)
 
     # ----------------------------------------------------------------------------------------
     # Final dataset
