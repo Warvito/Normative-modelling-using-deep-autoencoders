@@ -32,7 +32,7 @@ def compute_brain_regions_deviations(diff_df, clinical_df, disease_label, hc_lab
 
     for region in COLUMNS_NAME:
         _, pvalue = stats.mannwhitneyu(diff_hc[region], diff_patient[region])
-        effect_size = np.abs(cliff_delta(diff_hc[region].values, diff_patient[region].values))
+        effect_size = cliff_delta(diff_hc[region].values, diff_patient[region].values)
 
         region_df = region_df.append({'regions': region, 'pvalue': pvalue, 'effect_size': effect_size},
                                      ignore_index=True)
@@ -153,7 +153,7 @@ def main(dataset_name, disease_label):
     plt.clf()
 
     # --------------------------------------------------------------------------------------------
-    # Create Figure 4 of the paper
+    # Create figure for supplementary materials
     effect_size_df = effect_size_df.reindex(effect_size_df.mean().sort_values().index, axis=1)
 
     plt.figure(figsize=(16, 20))
@@ -168,6 +168,33 @@ def main(dataset_name, disease_label):
     plt.ylabel('Brain regions')
     plt.tight_layout()
     plt.savefig(comparison_dir / 'Regions.eps', format='eps')
+    plt.close()
+    plt.clf()
+
+    # --------------------------------------------------------------------------------------------
+    # Create Figure 4 of the paper
+    effect_size_sig_df = effect_size_df.reindex(effect_size_df.mean().sort_values().index, axis=1)
+    lower_bound = np.percentile(effect_size_sig_df, 2.5, axis=0)
+    higher_bound = np.percentile(effect_size_sig_df, 97.5, axis=0)
+
+    for i, column in enumerate(effect_size_sig_df.columns):
+        if (lower_bound[i] < 0) & (higher_bound[i] > 0):
+            effect_size_sig_df = effect_size_sig_df.drop(columns=column)
+
+    n_regions = len(effect_size_sig_df.columns)
+
+    plt.figure()
+    plt.hlines(range(n_regions),
+               np.percentile(effect_size_sig_df, 2.5, axis=0),
+               np.percentile(effect_size_sig_df, 97.5, axis=0))
+
+    plt.plot(effect_size_sig_df.mean().values, range(n_regions), 's', color='k')
+    plt.axvline(0, ls='--')
+    plt.yticks(np.arange(n_regions), effect_size_sig_df.columns)
+    plt.xlabel('Effect size')
+    plt.ylabel('Brain regions')
+    plt.tight_layout()
+    plt.savefig(comparison_dir / 'Significant_regions.eps', format='eps')
     plt.close()
     plt.clf()
 
