@@ -107,10 +107,10 @@ def main(dataset_name, disease_label):
 
         auc_bootstrap_test.append(auc)
 
-        temp = dataset_df[['Image_ID']]
-        temp['predictions'] = pred
+        temp_df = dataset_df[['Image_ID']].copy()
+        temp_df['predictions'] = pred
 
-        predictions_df = pd.concat([predictions_df, temp], axis=0)
+        predictions_df = pd.concat([predictions_df, temp_df], axis=0)
         predictions_df.to_csv(predictions_dir / 'homogeneous_bootstrap_{:03d}_prediction.csv'.format(i_bootstrap),
                               index=False)
 
