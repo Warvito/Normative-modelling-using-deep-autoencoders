@@ -32,7 +32,7 @@ def compute_brain_regions_deviations(diff_df, clinical_df, disease_label, hc_lab
 
     for region in COLUMNS_NAME:
         _, pvalue = stats.mannwhitneyu(diff_hc[region], diff_patient[region])
-        effect_size = cliff_delta(diff_hc[region], diff_patient[region])
+        effect_size = np.abs(cliff_delta(diff_hc[region].values, diff_patient[region].values))
 
         region_df = region_df.append({'regions': region, 'pvalue': pvalue, 'effect_size': effect_size},
                                      ignore_index=True)
@@ -60,7 +60,7 @@ def compute_classification_performance(reconstruction_error_df, clinical_df, dis
 def main(dataset_name, disease_label):
     """Perform the group analysis."""
     # ----------------------------------------------------------------------------
-    n_bootstrap = 20
+    n_bootstrap = 1000
 
     model_name = 'supervised_aae'
 
