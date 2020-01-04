@@ -140,6 +140,17 @@ def main():
     # ----------------------------------------------------------------------------------------
     # Final dataset
     print('------------- FINAL DATASET ----------------')
+    print('Total of participants = {:}'.format(len(dataset_corrected_df)))
+    print('')
+    print('Number of participants per diagnosis')
+    print(dataset_corrected_df.groupby('Diagn')['Image_ID'].count())
+    print('')
+
+    contingency_table = pd.crosstab(dataset_corrected_df.Gender, dataset_corrected_df.Diagn)
+    print('Contigency table of gender x diagnosis')
+    print(contingency_table)
+    print('')
+
     print_gender_analysis(contingency_table)
     print_age_stats(dataset_corrected_df)
     print_age_analysis(dataset_corrected_df)
