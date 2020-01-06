@@ -19,6 +19,9 @@ def main():
     # ----------------------------------------------------------------------------
     n_bootstrap = 1000
     model_name = 'supervised_aae'
+    outputs_dir = PROJECT_ROOT / 'outputs'
+    bootstrap_dir = outputs_dir / 'bootstrap_analysis'
+    model_dir = bootstrap_dir / model_name
 
     # ----------------------------------------------------------------------------
     dataset_name = 'ADNI'
@@ -26,10 +29,6 @@ def main():
     freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
     ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
     adni_df = load_dataset(participants_path, ids_path, freesurfer_path)
-
-    outputs_dir = PROJECT_ROOT / 'outputs'
-    bootstrap_dir = outputs_dir / 'bootstrap_analysis'
-    model_dir = bootstrap_dir / model_name
 
     mean_adni_list = []
 
@@ -74,9 +73,55 @@ def main():
                               'LMCI': np.percentile(mean_adni_list, 97.5, axis=0)[2],
                               'AD': np.percentile(mean_adni_list, 97.5, axis=0)[3], }, ignore_index=True)
     results.to_csv(bootstrap_dir / dataset_name / 'deviations.csv', index=False)
+    # ----------------------------------------------------------------------------
+    dataset_name = 'AIBL'
+    participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
+    ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
+    brescia_df = load_dataset(participants_path, ids_path, freesurfer_path)
+
+    mean_brescia_list = []
+
+    for i_bootstrap in tqdm(range(n_bootstrap)):
+        bootstrap_model_dir = model_dir / '{:03d}'.format(i_bootstrap)
+        output_dataset_dir = bootstrap_model_dir / dataset_name
+        output_dataset_dir.mkdir(exist_ok=True)
+
+        reconstruction_error_df = pd.read_csv(output_dataset_dir / 'reconstruction_error.csv')
+
+        error_hc = reconstruction_error_df.loc[brescia_df['Diagn'] == 1]['Reconstruction error']
+        error_mci = reconstruction_error_df.loc[brescia_df['Diagn'] == 18]['Reconstruction error']
+        error_ad = reconstruction_error_df.loc[brescia_df['Diagn'] == 17]['Reconstruction error']
+
+        mean_brescia_list.append([error_hc.mean(), error_mci.mean(), error_ad.mean()])
+
+    mean_brescia_list = np.array(mean_brescia_list)
+    plt.hlines(range(3),
+               np.percentile(mean_brescia_list, 2.5, axis=0),
+               np.percentile(mean_brescia_list, 97.5, axis=0))
+
+    plt.plot(np.mean(mean_brescia_list, axis=0), range(3), 's', color='k')
+    plt.savefig(bootstrap_dir / 'AIBL.eps', format='eps')
+    plt.close()
+    plt.clf()
+
+    results = pd.DataFrame(columns={'Measure', 'HC', 'MCI', 'AD'})
+    results = results.append({'Measure': 'Mean',
+                              'HC': np.mean(mean_brescia_list, axis=0)[0],
+                              'MCI': np.mean(mean_brescia_list, axis=0)[1],
+                              'AD': np.mean(mean_brescia_list, axis=0)[2], }, ignore_index=True)
+    results = results.append({'Measure': 'Lower',
+                              'HC': np.percentile(mean_brescia_list, 2.5, axis=0)[0],
+                              'MCI': np.percentile(mean_brescia_list, 2.5, axis=0)[1],
+                              'AD': np.percentile(mean_brescia_list, 2.5, axis=0)[2], }, ignore_index=True)
+    results = results.append({'Measure': 'Upper',
+                              'HC': np.percentile(mean_brescia_list, 97.5, axis=0)[0],
+                              'MCI': np.percentile(mean_brescia_list, 97.5, axis=0)[1],
+                              'AD': np.percentile(mean_brescia_list, 97.5, axis=0)[2], }, ignore_index=True)
+    results.to_csv(bootstrap_dir / dataset_name / 'deviations.csv', index=False)
 
     # ----------------------------------------------------------------------------
-    dataset_name = 'FBF_Brescia'
+    dataset_name = 'TOMC'
     participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
     freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
     ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
@@ -165,6 +210,50 @@ def main():
                               'HC': np.percentile(mean_oasis1_list, 97.5, axis=0)[0],
                               'AD': np.percentile(mean_oasis1_list, 97.5, axis=0)[1], }, ignore_index=True)
     results.to_csv(bootstrap_dir / dataset_name / 'deviations.csv', index=False)
+
+    # ----------------------------------------------------------------------------
+    dataset_name = 'MIRIAD'
+    participants_path = PROJECT_ROOT / 'data' / dataset_name / 'participants.tsv'
+    freesurfer_path = PROJECT_ROOT / 'data' / dataset_name / 'freesurferData.csv'
+    ids_path = PROJECT_ROOT / 'outputs' / (dataset_name + '_homogeneous_ids.csv')
+    oasis1_df = load_dataset(participants_path, ids_path, freesurfer_path)
+
+    mean_oasis1_list = []
+
+    for i_bootstrap in tqdm(range(n_bootstrap)):
+        bootstrap_model_dir = model_dir / '{:03d}'.format(i_bootstrap)
+        output_dataset_dir = bootstrap_model_dir / dataset_name
+        output_dataset_dir.mkdir(exist_ok=True)
+
+        reconstruction_error_df = pd.read_csv(output_dataset_dir / 'reconstruction_error.csv')
+
+        error_hc = reconstruction_error_df.loc[oasis1_df['Diagn'] == 1]['Reconstruction error']
+        error_ad = reconstruction_error_df.loc[oasis1_df['Diagn'] == 17]['Reconstruction error']
+
+        mean_oasis1_list.append([error_hc.mean(), error_ad.mean()])
+
+    mean_oasis1_list = np.array(mean_oasis1_list)
+    plt.hlines(range(2),
+               np.percentile(mean_oasis1_list, 2.5, axis=0),
+               np.percentile(mean_oasis1_list, 97.5, axis=0))
+
+    plt.plot(np.mean(mean_oasis1_list, axis=0), range(2), 's', color='k')
+    plt.savefig(bootstrap_dir / 'MIRIAD.eps', format='eps')
+    plt.close()
+    plt.clf()
+
+    results = pd.DataFrame(columns={'Measure', 'HC', 'AD'})
+    results = results.append({'Measure': 'Mean',
+                              'HC': np.mean(mean_oasis1_list, axis=0)[0],
+                              'AD': np.mean(mean_oasis1_list, axis=0)[1], }, ignore_index=True)
+    results = results.append({'Measure': 'Lower',
+                              'HC': np.percentile(mean_oasis1_list, 2.5, axis=0)[0],
+                              'AD': np.percentile(mean_oasis1_list, 2.5, axis=0)[1], }, ignore_index=True)
+    results = results.append({'Measure': 'Upper',
+                              'HC': np.percentile(mean_oasis1_list, 97.5, axis=0)[0],
+                              'AD': np.percentile(mean_oasis1_list, 97.5, axis=0)[1], }, ignore_index=True)
+    results.to_csv(bootstrap_dir / dataset_name / 'deviations.csv', index=False)
+
 
 
 if __name__ == "__main__":
