@@ -42,10 +42,19 @@ def load_demographic_data(demographic_path, ids_path):
 
     ids_df = pd.read_csv(ids_path, usecols=['Image_ID'])
 
-    if 'Session_ID' in demographic_df.columns:
+    if 'Run_ID' in demographic_df.columns:
+        demographic_df['uid'] = demographic_df['participant_id'] + '_' + demographic_df['Session_ID'] + '_run-' + \
+                                demographic_df['Run_ID'].apply(str)
+
+        ids_df['uid'] = ids_df['Image_ID'].str.split('_').str[0] + '_' + ids_df['Image_ID'].str.split('_').str[1]+ '_' + ids_df['Image_ID'].str.split('_').str[2]
+
+        dataset_df = pd.merge(ids_df, demographic_df, on='uid')
+        dataset_df = dataset_df.drop(columns=['uid'])
+
+    elif 'Session_ID' in demographic_df.columns:
         demographic_df['uid'] = demographic_df['participant_id'] + '_' + demographic_df['Session_ID']
 
-        ids_df['uid'] = ids_df['Image_ID'].str.split('_').str[0]+'_'+ids_df['Image_ID'].str.split('_').str[1]
+        ids_df['uid'] = ids_df['Image_ID'].str.split('_').str[0] + '_' + ids_df['Image_ID'].str.split('_').str[1]
 
         dataset_df = pd.merge(ids_df, demographic_df, on='uid')
         dataset_df = dataset_df.drop(columns=['uid'])
