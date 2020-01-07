@@ -122,6 +122,34 @@
 
 ./classifier_group_analysis_1x1.py -D "MIRIAD" -L 17
 
+# Calculate generalization
+./classifier_test.py -D "ADNI" -L 17 -E "OASIS1"
+./classifier_test.py -D "ADNI" -L 17 -E "TOMC"
+./classifier_test.py -D "ADNI" -L 17 -E "MIRIAD"
+./classifier_test.py -D "ADNI" -L 17 -E "AIBL"
+
+./classifier_test.py -D "TOMC" -L 17 -E "ADNI"
+./classifier_test.py -D "TOMC" -L 17 -E "MIRIAD"
+./classifier_test.py -D "TOMC" -L 17 -E "OASIS1"
+./classifier_test.py -D "TOMC" -L 17 -E "AIBL"
+./classifier_test.py -D "TOMC" -L 18 -E "AIBL"
+
+./classifier_test.py -D "OASIS1" -L 17 -E "ADNI"
+./classifier_test.py -D "OASIS1" -L 17 -E "TOMC"
+./classifier_test.py -D "OASIS1" -L 17 -E "MIRIAD"
+./classifier_test.py -D "OASIS1" -L 17 -E "AIBL"
+
+./classifier_test.py -D "AIBL" -L 17 -E "ADNI"
+./classifier_test.py -D "AIBL" -L 17 -E "TOMC"
+./classifier_test.py -D "AIBL" -L 17 -E "OASIS1"
+./classifier_test.py -D "AIBL" -L 17 -E "AIBL"
+./classifier_test.py -D "AIBL" -L 18 -E "TOMC"
+
+./classifier_test.py -D "MIRIAD" -L 17 -E "ADNI"
+./classifier_test.py -D "MIRIAD" -L 17 -E "TOMC"
+./classifier_test.py -D "MIRIAD" -L 17 -E "OASIS1"
+./classifier_test.py -D "MIRIAD" -L 17 -E "AIBL"
+
 # comparing methods
 ./classifier_vs_normative.py -D "ADNI" -L 17
 ./classifier_vs_normative.py -D "ADNI" -L 27

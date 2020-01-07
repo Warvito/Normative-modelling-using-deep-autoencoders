@@ -10,6 +10,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import RobustScaler
 from sklearn_rvm.em_rvm import EMRVC
 from tqdm import tqdm
+from joblib import dump
 
 from utils import COLUMNS_NAME, load_dataset
 
@@ -37,6 +38,8 @@ def main(dataset_name, disease_label):
     classifier_dataset_analysis_dir = classifier_dataset_dir / '{:02d}_vs_{:02d}'.format(hc_label, disease_label)
     ids_dir = classifier_dataset_analysis_dir / 'ids'
 
+    classifier_storage_dir = classifier_dataset_analysis_dir / 'models'
+    classifier_storage_dir.mkdir(exist_ok=True)
     predictions_dir = classifier_dataset_analysis_dir / 'predictions'
     predictions_dir.mkdir(exist_ok=True)
 
@@ -78,6 +81,9 @@ def main(dataset_name, disease_label):
 
         predictions_df = dataset_df[['Image_ID']].copy()
         predictions_df['predictions'] = pred
+
+        dump(rvm, classifier_storage_dir / '{:03d}_rvr.joblib'.format(i_bootstrap))
+        dump(scaler, classifier_storage_dir / '{:03d}_scaler.joblib'.format(i_bootstrap))
 
         # -----------------------------------------------------------------
         ids_filename_test = 'homogeneous_bootstrap_{:03d}_test.csv'.format(i_bootstrap)
