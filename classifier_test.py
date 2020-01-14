@@ -74,7 +74,7 @@ def main(dataset_name, disease_label, evaluated_dataset):
         aucs_test.append(auc)
 
     aucs_df = pd.DataFrame(columns=['AUCs'], data=aucs_test)
-    aucs_df.to_csv(generalization_dir / '{:}_aucs.csv'.format(evaluated_dataset))
+    aucs_df.to_csv(generalization_dir / '{:}_aucs.csv'.format(evaluated_dataset), index=False)
 
     results = pd.DataFrame(columns=['Measure', 'Value'])
     results = results.append({'Measure': 'mean', 'Value': np.mean(aucs_test)}, ignore_index=True)
