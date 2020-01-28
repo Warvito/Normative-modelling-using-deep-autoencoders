@@ -157,7 +157,7 @@
 ./classifier_test.py -D "AIBL" -L 17 -E "ADNI"
 ./classifier_test.py -D "AIBL" -L 17 -E "TOMC"
 ./classifier_test.py -D "AIBL" -L 17 -E "OASIS1"
-./classifier_test.py -D "AIBL" -L 17 -E "AIBL"
+./classifier_test.py -D "AIBL" -L 17 -E "MIRIAD"
 ./classifier_test.py -D "AIBL" -L 18 -E "TOMC"
 
 ./classifier_test.py -D "MIRIAD" -L 17 -E "ADNI"
@@ -185,7 +185,7 @@
 ./classifier_vs_normative_generalization.py -D "AIBL" -L 17 -E "ADNI"
 ./classifier_vs_normative_generalization.py -D "AIBL" -L 17 -E "TOMC"
 ./classifier_vs_normative_generalization.py -D "AIBL" -L 17 -E "OASIS1"
-./classifier_vs_normative_generalization.py -D "AIBL" -L 17 -E "AIBL"
+./classifier_vs_normative_generalization.py -D "AIBL" -L 17 -E "MIRIAD"
 ./classifier_vs_normative_generalization.py -D "AIBL" -L 18 -E "TOMC"
 
 ./classifier_vs_normative_generalization.py -D "MIRIAD" -L 17 -E "ADNI"

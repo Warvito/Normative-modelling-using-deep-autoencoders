@@ -41,9 +41,9 @@ def download_files(data_dir, selected_path, dataset_prefix_path, path_nas):
         print('{} does not have freesurferData.csv'.format(dataset_prefix_path))
 
 
-def main(path_nas):
+def main(path_nas_str):
     """Perform download of selected datasets from the network-attached storage."""
-    path_nas = Path(path_nas)
+    path_nas = Path(path_nas_str)
     data_dir = Path('data')
     data_dir.mkdir(exist_ok=True)
 
@@ -69,8 +69,8 @@ def main(path_nas):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-P', '--path_nas',
-                        dest='path_nas',
+                        dest='path_nas_str',
                         help='Path to the Network Attached Storage system.')
     args = parser.parse_args()
 
-    main(args.path_nas)
+    main(args.path_nas_str)
