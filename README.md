@@ -24,4 +24,14 @@ Check our [wiki](https://github.com/Warvito/Normative-modelling-using-deep-autoe
 ## Citation
 If you find this code useful for your research, please cite:
 
-    @article{}
+    @article {Pinaya2020.02.10.931824,
+	    author = {Pinaya, Walter H. L. and Scarpazza, Cristina and Garcia-Dias, Rafael and Vieira, Sandra and Baecker, Lea and da Costa, Pedro F. and Redolfi, Alberto and Frisoni, Giovanni B. and Pievani, Michela and Calhoun, Vince D. and Sato, Jo{\~a}o R. and Mechelli, Andrea and , and ,},
+	    title = {Normative modelling using deep autoencoders: a multi-cohort study on mild cognitive impairment and Alzheimer{\textquoteright}s disease},
+	    elocation-id = {2020.02.10.931824},
+	    year = {2020},
+	    doi = {10.1101/2020.02.10.931824},
+	    publisher = {Cold Spring Harbor Laboratory},
+	    URL = {https://www.biorxiv.org/content/early/2020/02/11/2020.02.10.931824},
+	    eprint = {https://www.biorxiv.org/content/early/2020/02/11/2020.02.10.931824.full.pdf},
+	    journal = {bioRxiv}
+}
