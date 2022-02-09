@@ -4,7 +4,7 @@ ipython
 Pillow
 matplotlib
 sklearn
-tensorflow-gpu==2.0.0b1
+tensorflow-gpu==2.5.3
 tables
 joblib
 nibabel
